@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: doma-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
+      POSTGRES_DB: doma_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: doma-api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespw@db:5432/doma_db
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: doma-web
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

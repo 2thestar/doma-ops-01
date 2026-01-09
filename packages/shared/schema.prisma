@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SUPERVISOR
+  STAFF
+  EXECUTOR
+  OWNER
+  INSPECTOR
+}
+
+enum SpaceType {
+  ROOM
+  PUBLIC
+  OUTDOOR
+  BOH
+  VENUE
+}
+
+enum SpaceStatus {
+  DIRTY
+  CLEANING
+  INSPECTED
+  READY
+  OUT_OF_ORDER
+  OUT_OF_SERVICE
+}
+
+enum TaskStatus {
+  NEW
+  TRIAGED
+  ASSIGNED
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  VERIFIED
+  CLOSED
+}
+
+enum TaskPriority {
+  P1
+  P2
+  P3
+}
+
+enum TaskType {
+  HK
+  MAINTENANCE
+  FRONT_DESK
+  SPA
+  FNB
+  INSPECTION
+  PREVENTIVE
+  OTHER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  telegramId String? @unique
+  name      String
+  email     String?  @unique
+  role      UserRole @default(EXECUTOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasksAssigned Task[] @relation("TaskAssignee")
+  tasksReported Task[] @relation("TaskReporter")
+  activityLogs  ActivityLog[]
+}
+
+model Property {
+  id   String @id @default(uuid())
+  name String
+  zones Zone[]
+}
+
+model Zone {
+  id         String @id @default(uuid())
+  name       String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id])
+  spaces     Space[]
+}
+
+model Space {
+  id        String      @id @default(uuid())
+  name      String
+  type      SpaceType
+  status    SpaceStatus @default(DIRTY)
+  zoneId    String
+  zone      Zone        @relation(fields: [zoneId], references: [id])
+  tasks     Task[]
+  equipment Equipment[]
+}
+
+model Equipment {
+  id           String  @id @default(uuid())
+  name         String
+  serialNumber String?
+  spaceId      String
+  space        Space   @relation(fields: [spaceId], references: [id])
+  tasks        Task[]
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(NEW)
+  priority    TaskPriority @default(P3)
+  type        TaskType
+  spaceId     String
+  space       Space        @relation(fields: [spaceId], references: [id])
+  equipmentId String?
+  equipment   Equipment?   @relation(fields: [equipmentId], references: [id])
+  assigneeId  String?
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  reporterId  String?
+  reporter    User?        @relation("TaskReporter", fields: [reporterId], references: [id])
+  dueAt       DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  isGuestImpact Boolean @default(false)
+  images      String[]
+  
+  templateId  String?
+  template    TaskTemplate? @relation(fields: [templateId], references: [id])
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  activityLogs ActivityLog[]
+}
+
+model TaskTemplate {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  cronSchedule String
+  type         TaskType
+  category     String?
+  tasks        Task[]
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

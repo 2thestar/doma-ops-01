@@ -1,0 +1,42 @@
+services:
+  # API Service
+  - type: web
+    name: doma-api
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: apps/api/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: doma-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+
+  # Web Frontend Service
+  - type: web
+    name: doma-web
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: apps/web/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+    # Note: For SPA handling, ensuring 404s go to index.html is handled in Nginx config
+
+databases:
+  # Render PostgreSQL (Free Tier lasts 90 days, then costs $)
+  # Alternatively, User can use Supabase and provide DATABASE_URL manually env var
+  - name: doma-db
+    plan: free
+    databaseName: doma_db
+    user: postgres
+
+# NOTE: Render Free Tier spins down after inactivity.
+# For production use, "Starter" plan is recommended ($7/mo).
