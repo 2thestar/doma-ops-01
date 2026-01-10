@@ -26,6 +26,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/serve-static": "^5.0.4",
+    "@supabase/supabase-js": "^2.90.1",
     "dotenv": "^17.2.3",
     "grammy": "^1.39.2",
     "reflect-metadata": "^0.2.2",

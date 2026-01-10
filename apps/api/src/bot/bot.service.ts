@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Bot, Context, session, SessionFlavor, Keyboard, InlineKeyboard } from 'grammy';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { AuthService } from '../auth/auth.service';
 import { TasksService } from '../tasks/tasks.service';
 import { SpacesService } from '../spaces/spaces.service';
@@ -31,6 +32,7 @@ type BotContext = Context & SessionFlavor<SessionData> & {
 @Injectable()
 export class BotService implements OnModuleInit, OnModuleDestroy {
     private bot: Bot<BotContext>;
+    private supabase: SupabaseClient;
     private readonly logger = new Logger(BotService.name);
 
     constructor(
@@ -41,6 +43,16 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
     ) {
         const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
         this.bot = new Bot<BotContext>(token || 'dummy_token');
+
+        // Initialize Supabase
+        const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+        const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+
+        if (supabaseUrl && supabaseKey) {
+            this.supabase = createClient(supabaseUrl, supabaseKey);
+        } else {
+            this.logger.warn('Supabase credentials missing. Image upload will fail.');
+        }
     }
 
     async onModuleInit() {
@@ -247,33 +259,46 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             if (!photo) return;
 
             try {
+                if (!this.supabase) throw new Error('Supabase not configured');
+
                 const file = await ctx.api.getFile(photo.file_id);
                 if (file.file_path) {
                     const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
                     const fileUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
 
-                    const uploadsDir = path.join(process.cwd(), 'uploads');
-                    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
-                    const fileName = `${Date.now()}_${photo.file_id}.jpg`;
-                    const filePath = path.join(uploadsDir, fileName);
-
+                    // Download image buffer
                     const response = await fetch(fileUrl);
                     if (!response.body) throw new Error('No body');
 
-                    // @ts-ignore - streams types mismatch often in node fetch
-                    await pipeline(response.body, createWriteStream(filePath));
+                    const arrayBuffer = await response.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
 
-                    // Set public URL (assuming server is reachable, or use relative)
-                    // For MVP, we save relative path that frontend can resolve via server URL
-                    const publicUrl = `http://localhost:3000/uploads/${fileName}`;
+                    const fileName = `${Date.now()}_${photo.file_id}.jpg`;
+
+                    // Upload to Supabase Storage
+                    const { data, error } = await this.supabase
+                        .storage
+                        .from('task-images')
+                        .upload(fileName, buffer, {
+                            contentType: 'image/jpeg',
+                            upsert: false
+                        });
+
+                    if (error) throw error;
+
+                    // Get Public URL
+                    const { data: { publicUrl } } = this.supabase
+                        .storage
+                        .from('task-images')
+                        .getPublicUrl(fileName);
+
                     ctx.session.tempTask!.images = [publicUrl];
                 }
 
                 await this.finalizeTask(ctx);
             } catch (e) {
                 this.logger.error('Photo upload failed', e);
-                await ctx.reply('Failed to upload photo. Task created without it.');
+                await ctx.reply('Failed to upload photo to cloud. Task created without it.');
                 await this.finalizeTask(ctx);
             }
         });
