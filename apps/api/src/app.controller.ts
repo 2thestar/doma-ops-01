@@ -15,33 +15,47 @@ export class AppController {
 
   @Get('seed-users')
   async seedUsers() {
+    // Explicitly typing the array to match UserRole type from shared package
     const users: { name: string, role: UserRole, telegramId: string | null }[] = [
-      { name: 'Boris', role: UserRole.MANAGER, telegramId: null },
-      { name: 'Rita', role: UserRole.MANAGER, telegramId: null },
-      { name: 'Andreia Vasconcelos', role: UserRole.STAFF, telegramId: null },
-      { name: 'Kleiton Santos', role: UserRole.STAFF, telegramId: null },
-      { name: 'Luci Pereira', role: UserRole.STAFF, telegramId: null },
-      { name: 'Fleur van Heusde', role: UserRole.STAFF, telegramId: null },
-      { name: 'Esther Vargas', role: UserRole.STAFF, telegramId: null },
-      { name: 'Marilia Barbosa', role: UserRole.STAFF, telegramId: null },
-      { name: 'Tiago Matias', role: UserRole.MAINTENANCE, telegramId: null },
-      { name: 'Diogo Branquinho', role: UserRole.STAFF, telegramId: null },
-      { name: 'Damiane Rocha', role: UserRole.STAFF, telegramId: null },
-      { name: 'Carlota Da Graça', role: UserRole.STAFF, telegramId: null },
+      { name: 'Boris', role: 'MANAGER', telegramId: null },
+      { name: 'Rita', role: 'MANAGER', telegramId: null },
+      { name: 'Andreia Vasconcelos', role: 'STAFF', telegramId: null },
+      { name: 'Kleiton Santos', role: 'STAFF', telegramId: null },
+      { name: 'Luci Pereira', role: 'STAFF', telegramId: null },
+      { name: 'Fleur van Heusde', role: 'STAFF', telegramId: null },
+      { name: 'Esther Vargas', role: 'STAFF', telegramId: null },
+      { name: 'Marilia Barbosa', role: 'STAFF', telegramId: null },
+      { name: 'Tiago Matias', role: 'STAFF', telegramId: null }, // Changing Maintenance (not a role) to STAFF
+      { name: 'Diogo Branquinho', role: 'STAFF', telegramId: null },
+      { name: 'Damiane Rocha', role: 'STAFF', telegramId: null },
+      { name: 'Carlota Da Graça', role: 'STAFF', telegramId: null },
     ];
 
     let count = 0;
     for (const user of users) {
-      // Upsert: Create if new, Update if exists (to ensure role is correct)
-      await this.prisma.user.upsert({
-        where: { name: user.name },
-        update: { role: user.role, telegramId: user.telegramId },
-        create: { name: user.name, role: user.role, telegramId: user.telegramId },
+      // Name is not unique in Schema, so we use findFirst + Create/Update manually
+      const existing = await this.prisma.user.findFirst({
+        where: { name: user.name }
       });
-      count++;
+
+      if (existing) {
+        await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { role: user.role, telegramId: user.telegramId }
+        });
+      } else {
+        await this.prisma.user.create({
+          data: {
+            name: user.name,
+            role: user.role,
+            telegramId: user.telegramId
+          }
+        });
+        count++;
+      }
     }
 
-    return { status: 'SUCCESS', message: `Seeded ${count} users!` };
+    return { status: 'SUCCESS', message: `Seeded ${count} new users!` };
   }
 
   @Get('seed-spaces')
