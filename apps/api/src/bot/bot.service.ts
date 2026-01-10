@@ -62,8 +62,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
         this.setupMiddleware();
         this.setupCommands();
         this.setupHandlers();
-
-        // Setup Menu
+        // ... (rest of init) ...
         await this.bot.api.setMyCommands([
             { command: 'create', description: '🆕 Report an Issue' },
             { command: 'mytasks', description: '📋 My Assigned Tasks' },
@@ -72,12 +71,29 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             { command: 'cancel', description: '❌ Cancel Operation' },
         ]);
 
-        if (this.configService.get('NODE_ENV') !== 'production') {
-            this.bot.start({
-                onStart: (botInfo) => {
-                    this.logger.log(`Bot started as @${botInfo.username}`);
-                },
-            });
+        // Start the bot (Polling mode for MVP, even in prod)
+        // Note: For high scale, switch to Webhooks (bot.handleUpdate)
+        this.bot.start({
+            onStart: (botInfo) => {
+                this.logger.log(`Bot started as @${botInfo.username}`);
+            },
+        });
+    }
+
+    async notifyUser(userId: string, message: string) {
+        try {
+            // Find user to get Telegram ID
+            // We use AuthService validation or direct DB lookup
+            const user = await this.authService.validateTelegramUserByInternalId(userId);
+
+            if (user && user.telegramId) {
+                await this.bot.api.sendMessage(user.telegramId, message, { parse_mode: 'Markdown' });
+                this.logger.log(`Notification sent to user ${userId}`);
+            } else {
+                this.logger.warn(`User ${userId} has no connected Telegram ID.`);
+            }
+        } catch (e) {
+            this.logger.error(`Failed to notify user ${userId}`, e);
         }
     }
 
