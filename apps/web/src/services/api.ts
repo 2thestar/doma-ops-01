@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { CreateTaskPayload, Task } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://doma-api.onrender.com' : 'http://localhost:3000');
 
 const api = axios.create({
     baseURL: API_URL,
