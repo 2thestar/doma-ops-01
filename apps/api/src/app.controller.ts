@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 import { exec } from 'child_process';
+import { UserRole } from '@doma/shared';
 
 @Controller()
 export class AppController {
@@ -10,43 +11,32 @@ export class AppController {
     private readonly prisma: PrismaService,
   ) { }
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  @Get('migrate')
-  async runMigration() {
-    return new Promise((resolve) => {
-      exec('npx prisma migrate deploy --schema=/app/packages/shared/schema.prisma', (error: any, stdout: string, stderr: string) => {
-        if (error) {
-          resolve({ status: 'ERROR', error: error.message, stderr });
-          return;
-        }
-        resolve({ status: 'SUCCESS', stdout, stderr });
-      });
-    });
-  }
-
-  @Get('seed')
-  async seed() {
-    return { message: 'Use /seed-spaces or /seed-users' };
-  }
+  // ... (methods) ...
 
   @Get('seed-users')
   async seedUsers() {
-    const users = [
-      { name: 'Boris', role: 'MANAGER', telegramId: null }, // User requested this account
-      { name: 'Rita', role: 'MANAGER', telegramId: null },
-      { name: 'Andreia Vasconcelos', role: 'STAFF', telegramId: null },
+    const users: { name: string, role: UserRole, telegramId: string | null }[] = [
+      { name: 'Boris', role: UserRole.MANAGER, telegramId: null },
+      { name: 'Rita', role: UserRole.MANAGER, telegramId: null },
+      { name: 'Andreia Vasconcelos', role: UserRole.STAFF, telegramId: null },
+      { name: 'Kleiton Santos', role: UserRole.STAFF, telegramId: null },
+      { name: 'Luci Pereira', role: UserRole.STAFF, telegramId: null },
+      { name: 'Fleur van Heusde', role: UserRole.STAFF, telegramId: null },
+      { name: 'Esther Vargas', role: UserRole.STAFF, telegramId: null },
+      { name: 'Marilia Barbosa', role: UserRole.STAFF, telegramId: null },
+      { name: 'Tiago Matias', role: UserRole.MAINTENANCE, telegramId: null },
+      { name: 'Diogo Branquinho', role: UserRole.STAFF, telegramId: null },
+      { name: 'Damiane Rocha', role: UserRole.STAFF, telegramId: null },
+      { name: 'Carlota Da Graça', role: UserRole.STAFF, telegramId: null },
     ];
 
     let count = 0;
     for (const user of users) {
+      // Upsert: Create if new, Update if exists (to ensure role is correct)
       await this.prisma.user.upsert({
         where: { name: user.name },
-        update: user,
-        create: user,
+        update: { role: user.role, telegramId: user.telegramId },
+        create: { name: user.name, role: user.role, telegramId: user.telegramId },
       });
       count++;
     }
