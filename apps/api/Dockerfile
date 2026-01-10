@@ -1,4 +1,4 @@
-FROM node:18-slim AS builder
+FROM node:18 AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ WORKDIR /app/apps/api
 RUN npm run build
 
 # --- Production Stage ---
-FROM node:18-slim
+FROM node:18
 
 WORKDIR /app
 

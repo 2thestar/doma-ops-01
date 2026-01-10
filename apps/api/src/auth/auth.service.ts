@@ -18,4 +18,17 @@ export class AuthService {
         // TODO: Implement email/magic link auth
         return null;
     }
+
+    async registerPendingUser(telegramId: string, name: string) {
+        // Use createUser from usersService (we need to make sure it handles the mapped role)
+        // NOTE: usersService.create needs to support setting role, or we default to PENDING in logic.
+        // Assuming update UsersService or use prisma directly? 
+        // Let's defer to UsersService. 
+        // Actually, let's just do it via usersService.
+        return this.usersService.create({
+            telegramId,
+            name,
+            role: 'PENDING'
+        });
+    }
 }

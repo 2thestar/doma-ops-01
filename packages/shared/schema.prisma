@@ -16,6 +16,7 @@ enum UserRole {
   EXECUTOR
   OWNER
   INSPECTOR
+  PENDING
 }
 
 enum SpaceType {

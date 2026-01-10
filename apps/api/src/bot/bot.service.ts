@@ -14,13 +14,16 @@ import { promisify } from 'util';
 
 // Define Session Data
 interface SessionData {
-    step: 'IDLE' | 'CREATING_TITLE' | 'CREATING_SPACE' | 'CREATING_PHOTO';
+    step: 'IDLE' | 'CREATING_TITLE' | 'CREATING_SPACE' | 'CREATING_PHOTO' | 'WAITING_FOR_NAME';
     tempTask?: {
         title?: string;
         priority?: TaskPriority;
         spaceId?: string;
         isGuestImpact?: boolean;
         images?: string[];
+    };
+    tempUser?: {
+        telegramId?: string;
     };
 }
 
@@ -91,15 +94,35 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
         // Auth Middleware
         this.bot.use(async (ctx, next) => {
             if (!ctx.from) return next();
+
+            // Allow START command to pass through to handler
+            if (ctx.message?.text === '/start') {
+                return next();
+            }
+
+            // Allow Name Input during Onboarding
+            if (ctx.session.step === 'WAITING_FOR_NAME') {
+                return next();
+            }
+
             try {
+                // Try to validate user
                 const user = await this.authService.validateTelegramUser(ctx.from.id.toString());
+
+                // Check if Pending
+                if (user.role === 'PENDING') {
+                    await ctx.reply('⏳ **Account Pending Approval**\n\nYour request has been sent to the manager. You will be notified once approved.', { parse_mode: 'Markdown' });
+                    return;
+                }
+
                 ctx.user = user;
                 return next();
             } catch (e) {
-                if (ctx.message?.text === '/start') {
-                    return next();
+                // User not found -> Trigger Onboarding
+                if (ctx.session.step !== 'WAITING_FOR_NAME') {
+                    ctx.session.step = 'WAITING_FOR_NAME';
+                    await ctx.reply('👋 **Welcome to DOMA!**\n\nI don\'t recognize you yet.\n\nPlease reply with your **Full Name** to request access:', { parse_mode: 'Markdown' });
                 }
-                await ctx.reply('You are not authorized. Contact Admin to link your Telegram ID.');
             }
         });
     }
@@ -182,9 +205,29 @@ _Need more help? Contact your manager._
     private setupHandlers() {
         // Handle Text Inputs based on Step
         this.bot.on('message:text', async (ctx) => {
-            if (!ctx.user) return;
+            if (!ctx.from) return;
             const text = ctx.message.text;
             const step = ctx.session.step;
+
+            // --- ONBOARDING FLOW ---
+            if (step === 'WAITING_FOR_NAME') {
+                try {
+                    // Create PENDING user
+                    await this.authService.registerPendingUser(ctx.from.id.toString(), text);
+
+                    ctx.session.step = 'IDLE';
+                    await ctx.reply(`✅ **Request Sent!**\n\nName: *${text}*\nID: \`${ctx.from.id}\`\n\nAn admin will review your request shortly.`, { parse_mode: 'Markdown' });
+                } catch (e) {
+                    this.logger.error('Registration failed', e);
+                    await ctx.reply('❌ Error registering. Please try again later.');
+                }
+                return;
+            }
+
+            // --- AUTH CHECK FOR OTHER ACTIONS ---
+            // If we reached here, middleware should have attached ctx.user (unless it failed/pending)
+            // But confirming just in case logic slips
+            if (!ctx.user) return;
 
             if (step === 'CREATING_TITLE') {
                 ctx.session.tempTask!.title = text;
