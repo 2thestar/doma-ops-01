@@ -3,7 +3,7 @@
 // but for a lightweight shared package, we might duplicate strictly or use a type-only import.
 // For now, let's strictly define them to avoid referencing the heavy prisma client in frontend bundle if not careful.
 
-export type UserRole = 'ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'STAFF' | 'EXECUTOR' | 'OWNER' | 'INSPECTOR';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'STAFF' | 'EXECUTOR' | 'OWNER' | 'INSPECTOR' | 'PENDING';
 
 export type TaskStatus = 'NEW' | 'TRIAGED' | 'ASSIGNED' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE' | 'VERIFIED' | 'CLOSED';
 
