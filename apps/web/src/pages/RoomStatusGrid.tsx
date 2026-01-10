@@ -28,8 +28,8 @@ export const RoomStatusGrid: React.FC = () => {
         if (!confirm('Sync with MEWS? This will fetch latest room statuses.')) return;
         setSyncing(true);
         try {
-            await mewsService.sync();
-            alert('Sync Successful!');
+            const res = await mewsService.sync();
+            alert(res.message || 'Sync Successful!');
             await loadSpaces();
         } catch (e) {
             console.error(e);

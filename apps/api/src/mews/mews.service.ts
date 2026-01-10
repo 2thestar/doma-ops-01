@@ -56,6 +56,11 @@ export class MewsService {
 
         try {
             const mewsRooms = await this.getRoomStatuses();
+            this.logger.log(`Fetched ${mewsRooms.length} rooms from MEWS`);
+            if (mewsRooms.length > 0) {
+                this.logger.debug(`Sample Room Data: ${JSON.stringify(mewsRooms[0])}`);
+            }
+
             if (mewsRooms.length === 0) return { message: 'No rooms found in MEWS.' };
 
             // Ensure Property & Zone Exist
