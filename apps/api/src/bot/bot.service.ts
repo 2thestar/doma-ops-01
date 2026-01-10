@@ -4,6 +4,33 @@ import { Bot, Context, session, SessionFlavor, Keyboard, InlineKeyboard } from '
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { AuthService } from '../auth/auth.service';
 import { TasksService } from '../tasks/tasks.service';
+import { SpacesService } from '../spaces/spaces.service';
+import { User, TaskPriority, TaskType } from '@doma/shared';
+import * as fs from 'fs';
+import * as path from 'path';
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
+import { promisify } from 'util';
+
+// Define Session Data
+interface SessionData {
+    step: 'IDLE' | 'CREATING_TITLE' | 'CREATING_SPACE' | 'CREATING_PHOTO' | 'WAITING_FOR_NAME';
+    tempTask?: {
+        title?: string;
+        priority?: TaskPriority;
+        spaceId?: string;
+        isGuestImpact?: boolean;
+        images?: string[];
+    };
+    tempUser?: {
+        telegramId?: string;
+    };
+}
+
+// Define Custom Context
+type BotContext = Context & SessionFlavor<SessionData> & {
+    user?: User;
+};
 
 @Injectable()
 export class BotService implements OnModuleInit, OnModuleDestroy {
