@@ -54,3 +54,10 @@ export const equipmentService = {
         return response.data;
     }
 };
+
+export const mewsService = {
+    sync: async () => {
+        const response = await api.post('/mews/sync');
+        return response.data;
+    }
+};

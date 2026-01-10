@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import type { Space, SpaceStatus } from '@doma/shared';
-import { spacesService } from '../services/api';
+import { spacesService, mewsService } from '../services/api';
 
 export const RoomStatusGrid: React.FC = () => {
     const [spaces, setSpaces] = useState<Space[]>([]);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         loadSpaces();
@@ -20,6 +21,21 @@ export const RoomStatusGrid: React.FC = () => {
             console.error('Failed to load spaces', e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSync = async () => {
+        if (!confirm('Sync with MEWS? This will fetch latest room statuses.')) return;
+        setSyncing(true);
+        try {
+            await mewsService.sync();
+            alert('Sync Successful!');
+            await loadSpaces();
+        } catch (e) {
+            console.error(e);
+            alert('Sync Failed. Check console.');
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -40,7 +56,12 @@ export const RoomStatusGrid: React.FC = () => {
         <div className="room-grid-page">
             <header className="page-header">
                 <h2>Live Room Status</h2>
-                <button onClick={loadSpaces} className="refresh-btn">🔄</button>
+                <div className="actions">
+                    <button onClick={handleSync} className="sync-btn" disabled={syncing}>
+                        {syncing ? '⏳ Syncing...' : '🔗 Sync MEWS'}
+                    </button>
+                    <button onClick={loadSpaces} className="refresh-btn">🔄</button>
+                </div>
             </header>
 
             <div className="grid-container">
@@ -105,6 +126,24 @@ export const RoomStatusGrid: React.FC = () => {
                     border: none;
                     font-size: 1.2rem;
                     cursor: pointer;
+                }
+                .actions {
+                    display: flex;
+                    gap: var(--spacing-sm);
+                    align-items: center;
+                }
+                .sync-btn {
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    padding: 4px 12px;
+                    border-radius: var(--radius-sm);
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    color: var(--text-primary);
+                }
+                .sync-btn:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
                 }
             `}</style>
         </div>
