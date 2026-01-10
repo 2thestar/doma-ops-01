@@ -5,6 +5,7 @@ import { SpaceStatus } from '@prisma/client';
 
 @Injectable()
 export class MewsService {
+    // Logger for MewsService
     private readonly logger = new Logger(MewsService.name);
     private readonly apiUrl: string;
     private readonly clientToken: string;
