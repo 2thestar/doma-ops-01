@@ -74,12 +74,23 @@ export class SpacesService {
   }
 
   async mockSeed() {
-    const count = await this.prisma.space.count();
-    if (count > 0) return { message: 'Database already seeded' };
+    const spaceCount = await this.prisma.space.count();
+    if (spaceCount > 0) return { message: 'Database already seeded' };
 
-    // Create Default Zones
+    // Ensure Property Exists
+    let property = await this.prisma.property.findFirst();
+    if (!property) {
+      property = await this.prisma.property.create({
+        data: { name: 'DOMA Hotel' }
+      });
+    }
+
+    // Create Default Zone
     const zone = await this.prisma.zone.create({
-      data: { name: 'Main Building', description: 'Primary Hotel Wing' }
+      data: {
+        name: 'Main Building',
+        propertyId: property.id
+      }
     });
 
     // Create Spaces
