@@ -72,4 +72,44 @@ export class SpacesService {
       data: { status },
     });
   }
+
+  async mockSeed() {
+    const count = await this.prisma.space.count();
+    if (count > 0) return { message: 'Database already seeded' };
+
+    // Create Default Zones
+    const zone = await this.prisma.zone.create({
+      data: { name: 'Main Building', description: 'Primary Hotel Wing' }
+    });
+
+    // Create Spaces
+    const spaces = [
+      { name: 'Lobby', type: 'COMMON_AREA', status: 'READY' },
+      { name: 'Gym', type: 'COMMON_AREA', status: 'READY' },
+      { name: 'Restaurant', type: 'COMMON_AREA', status: 'READY' },
+      { name: '101', type: 'GUEST_ROOM', status: 'READY' },
+      { name: '102', type: 'GUEST_ROOM', status: 'DIRTY' },
+      { name: '103', type: 'GUEST_ROOM', status: 'CLEANING' },
+      { name: '104', type: 'GUEST_ROOM', status: 'INSPECTED' },
+      { name: '105', type: 'GUEST_ROOM', status: 'OOO' },
+      { name: '201', type: 'GUEST_ROOM', status: 'READY' },
+      { name: '202', type: 'GUEST_ROOM', status: 'READY' },
+      { name: '203', type: 'GUEST_ROOM', status: 'DIRTY' },
+      { name: '204', type: 'GUEST_ROOM', status: 'READY' },
+      { name: '205', type: 'GUEST_ROOM', status: 'READY' },
+    ];
+
+    for (const s of spaces) {
+      await this.prisma.space.create({
+        data: {
+          name: s.name,
+          type: s.type as any,
+          status: s.status as any,
+          zoneId: zone.id
+        }
+      });
+    }
+
+    return { message: `Seeded ${spaces.length} spaces` };
+  }
 }

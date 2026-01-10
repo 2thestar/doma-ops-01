@@ -12,6 +12,11 @@ export class SpacesController {
     return this.spacesService.create(createSpaceDto);
   }
 
+  @Post('seed')
+  seed() {
+    return this.spacesService.mockSeed();
+  }
+
   @Get()
   findAll() {
     return this.spacesService.findAll();
