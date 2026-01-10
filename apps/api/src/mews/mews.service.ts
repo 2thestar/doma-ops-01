@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class MewsService {
@@ -9,7 +10,10 @@ export class MewsService {
     private readonly accessToken: string;
     private readonly clientName = 'DOMA v1.0';
 
-    constructor(private configService: ConfigService) {
+    constructor(
+        private configService: ConfigService,
+        private prisma: PrismaService
+    ) {
         this.apiUrl = this.configService.get<string>('MEWS_API_URL', 'https://api.mews.com/api/connector/v1');
         this.clientToken = this.configService.get<string>('MEWS_CLIENT_TOKEN', '');
         this.accessToken = this.configService.get<string>('MEWS_ACCESS_TOKEN', '');
@@ -38,10 +42,69 @@ export class MewsService {
             }
 
             const data = await response.json();
-            return data.Spaces || []; // Adjust based on actual API response structure
+            return data.Spaces || [];
         } catch (error) {
-            this.logger.error('Failed to sync with MEWS', error);
+            this.logger.error('Failed to fetch from MEWS', error);
             return [];
+        }
+    }
+
+    async syncRooms() {
+        if (!this.clientToken || !this.accessToken) return { message: 'MEWS credentials missing' };
+
+        try {
+            const mewsRooms = await this.getRoomStatuses();
+            if (mewsRooms.length === 0) return { message: 'No rooms found in MEWS.' };
+
+            // Ensure Property & Zone Exist
+            let property = await this.prisma.property.findFirst();
+            if (!property) {
+                property = await this.prisma.property.create({ data: { name: 'DOMA Hotel' } });
+            }
+
+            let zone = await this.prisma.zone.findFirst({ where: { propertyId: property.id } });
+            if (!zone) {
+                zone = await this.prisma.zone.create({
+                    data: { name: 'Main Building', propertyId: property.id }
+                });
+            }
+
+            let updatedCount = 0;
+
+            for (const room of mewsRooms) {
+                const mappedStatus = this.mapMewsStatus(room.State); // Function to implement
+                if (!mappedStatus) continue;
+
+                await this.prisma.space.upsert({
+                    where: { name: room.Number }, // Ideally use externalId, but name is safer for MVP
+                    update: { status: mappedStatus },
+                    create: {
+                        name: room.Number,
+                        type: 'ROOM', // Enum: SpaceType.ROOM
+                        status: mappedStatus,
+                        zoneId: zone.id
+                    }
+                });
+                updatedCount++;
+            }
+
+            return { message: `Synced ${updatedCount} rooms from MEWS.` };
+
+        } catch (error) {
+            this.logger.error('Sync failed', error);
+            throw error;
+        }
+    }
+
+    private mapMewsStatus(mewsState: string): 'DIRTY' | 'CLEANING' | 'INSPECTED' | 'READY' | 'OUT_OF_ORDER' | null {
+        // Mews States: Clean, Dirty, Inspected, OutOfService, OutOfOrder
+        switch (mewsState) {
+            case 'Dirty': return 'DIRTY';
+            case 'Clean': return 'READY'; // Or INSPECTED, depending on workflow
+            case 'Inspected': return 'INSPECTED';
+            case 'OutOfOrder': return 'OUT_OF_ORDER';
+            case 'OutOfService': return 'OUT_OF_SERVICE';
+            default: return 'DIRTY'; // Fallback
         }
     }
 }
