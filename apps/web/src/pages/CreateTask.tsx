@@ -47,7 +47,13 @@ export const CreateTask = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await taskService.create(formData);
+            // Sanitize payload: Empty assigneeId should be undefined
+            const payload = {
+                ...formData,
+                assigneeId: formData.assigneeId || undefined
+            };
+
+            await taskService.create(payload);
             sendNotification('New Task Assigned', `${formData.type}: ${formData.title}`);
             navigate('/');
         } catch (error) {
@@ -58,11 +64,20 @@ export const CreateTask = () => {
         }
     };
 
-    const handleImageUpload = () => {
-        // Mock upload
-        const mockImage = 'https://placehold.co/100x100?text=Img';
-        setFormData(prev => ({ ...prev, images: [...prev.images, mockImage] }));
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (ev.target?.result) {
+                    setFormData(prev => ({ ...prev, images: [...prev.images, ev.target!.result as string] }));
+                }
+            };
+            reader.readAsDataURL(file);
+        }
     };
+
+    const isUrgent = formData.priority === 'P1' || formData.priority === 'P2';
 
     return (
         <div className="fade-in">
@@ -146,15 +161,18 @@ export const CreateTask = () => {
                             <option value="P3">P3 - Routine</option>
                         </select>
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <label className="input-label">Due Date</label>
-                        <input
-                            type="datetime-local"
-                            className="form-control"
-                            value={formData.dueAt}
-                            onChange={e => setFormData({ ...formData, dueAt: e.target.value })}
-                        />
-                    </div>
+                    {/* Hide Due Date for Urgent tasks to reduce clutter */}
+                    {!isUrgent && (
+                        <div style={{ flex: 1 }}>
+                            <label className="input-label">Due Date</label>
+                            <input
+                                type="datetime-local"
+                                className="form-control"
+                                value={formData.dueAt}
+                                onChange={e => setFormData({ ...formData, dueAt: e.target.value })}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -171,10 +189,16 @@ export const CreateTask = () => {
 
                 <div className="input-group">
                     <label className="input-label">{t('lbl.uploadImage')}</label>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button type="button" className="btn" style={{ background: '#E5E7EB', width: 'auto' }} onClick={handleImageUpload}>
-                            📷 Add Photo
-                        </button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <label className="btn" style={{ background: '#E5E7EB', width: 'auto', cursor: 'pointer' }}>
+                            📷 {t('lbl.uploadImage')}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                style={{ display: 'none' }}
+                            />
+                        </label>
                         {formData.images.map((img, idx) => (
                             <img key={idx} src={img} alt="preview" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />
                         ))}
@@ -191,7 +215,7 @@ export const CreateTask = () => {
                     />
                 </div>
 
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ height: '48px', fontSize: '1rem' }}>
                     {loading ? 'Creating...' : t('lbl.create')}
                 </button>
             </form>

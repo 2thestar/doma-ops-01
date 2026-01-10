@@ -30,6 +30,11 @@ export class AppController {
 
   @Get('seed')
   async seed() {
+    return { message: 'Use /seed-spaces or /seed-users' };
+  }
+
+  @Get('seed-spaces')
+  async seedSpaces() {
     // 1. Ensure Property
     const property = await this.prisma.property.upsert({
       where: { id: 'doma-hotel' },
