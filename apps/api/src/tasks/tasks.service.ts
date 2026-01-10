@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma, TaskStatus } from '@prisma/client';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { BotService } from '../bot/bot.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => BotService)) private botService: BotService
+  ) { }
 
   async create(createTaskDto: CreateTaskDto) {
     const { spaceId, assigneeId, reporterId, equipmentId, ...rest } = createTaskDto;
@@ -41,8 +45,16 @@ export class TasksService {
             metadata: { title: rest.title }
           }
         }
-      }
+      },
+      include: { space: true }
     });
+
+    if (assigneeId) {
+      const spaceName = task.space?.name || 'Unknown Location';
+      const msg = `🚨 *New Task Assigned*\n\n**${task.title}**\n📍 ${spaceName}\n🚦 ${task.priority}\n\nPlease update status when started.`;
+      await this.botService.notifyUser(assigneeId, msg);
+    }
+
     return task;
   }
 
@@ -77,9 +89,13 @@ export class TasksService {
     });
   }
 
-  update(id: string, updateTaskDto: UpdateTaskDto) {
+  async update(id: string, updateTaskDto: UpdateTaskDto) {
     const { spaceId, assigneeId, reporterId, equipmentId, ...rest } = updateTaskDto;
-    return this.prisma.task.update({
+
+    // Check if assignee is changing
+    const oldTask = await this.prisma.task.findUnique({ where: { id } });
+
+    const task = await this.prisma.task.update({
       where: { id },
       data: {
         ...rest,
@@ -88,7 +104,16 @@ export class TasksService {
         ...(reporterId && { reporter: { connect: { id: reporterId } } }),
         ...(equipmentId && { equipment: { connect: { id: equipmentId } } }),
       },
+      include: { space: true }
     });
+
+    if (assigneeId && assigneeId !== oldTask?.assigneeId) {
+      const spaceName = task.space?.name || 'Unknown Location';
+      const msg = `👋 *Task Re-Assigned to You*\n\n**${task.title}**\n📍 ${spaceName}\n🚦 ${task.priority}`;
+      await this.botService.notifyUser(assigneeId, msg);
+    }
+
+    return task;
   }
 
   async updateStatus(id: string, status: TaskStatus, userId: string = 'system') {

@@ -13,6 +13,10 @@ export class AuthService {
         return user;
     }
 
+    async validateTelegramUserByInternalId(id: string) {
+        return this.usersService.findOne(id);
+    }
+
     // Placeholder for Web Login logic
     async validateWebUser(email: string) {
         // TODO: Implement email/magic link auth
