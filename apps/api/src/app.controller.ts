@@ -14,7 +14,7 @@ export class AppController {
   async runMigration() {
     const { exec } = require('child_process');
     return new Promise((resolve) => {
-      exec('npx prisma migrate deploy --schema=/app/packages/shared/schema.prisma', (error, stdout, stderr) => {
+      exec('npx prisma migrate deploy --schema=/app/packages/shared/schema.prisma', (error: any, stdout: string, stderr: string) => {
         if (error) {
           resolve({ status: 'ERROR', error: error.message, stderr });
           return;
