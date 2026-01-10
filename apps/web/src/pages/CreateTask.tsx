@@ -11,6 +11,7 @@ export const CreateTask = () => {
     const { sendNotification } = useNotifications();
     const [loading, setLoading] = useState(false);
     const [spaces, setSpaces] = useState<{ id: string, name: string }[]>([]);
+    const [users, setUsers] = useState<{ id: string, name: string, role: string }[]>([]);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -18,22 +19,28 @@ export const CreateTask = () => {
         type: 'HK' as TaskType,
         priority: 'P3' as TaskPriority,
         spaceId: '',
+        assigneeId: '',
+        dueAt: '',
         isGuestImpact: false,
         images: [] as string[]
     });
 
     useEffect(() => {
-        const loadSpaces = async () => {
+        const loadData = async () => {
             try {
-                // Dynamic import to avoid circular dependency issues if any, or just standard import
                 const api = await import('../services/api');
-                const data = await api.spacesService.findAll();
-                setSpaces(data.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+                const [spacesData, usersData] = await Promise.all([
+                    api.spacesService.findAll(),
+                    api.usersService.findAll()
+                ]);
+
+                setSpaces(spacesData.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+                setUsers(usersData);
             } catch (e) {
-                console.error('Failed to load spaces', e);
+                console.error('Failed to load data', e);
             }
         };
-        loadSpaces();
+        loadData();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -110,6 +117,24 @@ export const CreateTask = () => {
 
                 <div className="input-group" style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ flex: 1 }}>
+                        <label className="input-label">Assign To (Optional)</label>
+                        <select
+                            className="form-control"
+                            value={formData.assigneeId}
+                            onChange={e => setFormData({ ...formData, assigneeId: e.target.value })}
+                        >
+                            <option value="">-- Unassigned --</option>
+                            {users.map(user => (
+                                <option key={user.id} value={user.id}>
+                                    {user.name} ({user.role})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="input-group" style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ flex: 1 }}>
                         <label className="input-label">{t('lbl.priority')}</label>
                         <select
                             className="form-control"
@@ -118,8 +143,17 @@ export const CreateTask = () => {
                         >
                             <option value="P1">P1 - Urgent</option>
                             <option value="P2">P2 - High</option>
-                            <option value="P3">P3 - Normal</option>
+                            <option value="P3">P3 - Routine</option>
                         </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label className="input-label">Due Date</label>
+                        <input
+                            type="datetime-local"
+                            className="form-control"
+                            value={formData.dueAt}
+                            onChange={e => setFormData({ ...formData, dueAt: e.target.value })}
+                        />
                     </div>
                 </div>
 
@@ -161,6 +195,7 @@ export const CreateTask = () => {
                     {loading ? 'Creating...' : t('lbl.create')}
                 </button>
             </form>
+
 
             <style>{`
         .switch {
