@@ -65,6 +65,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             { command: 'create', description: '🆕 Report an Issue' },
             { command: 'mytasks', description: '📋 My Assigned Tasks' },
             { command: 'inspect', description: '🔍 Inspect Rooms' },
+            { command: 'help', description: '❓ Help & Guide' },
             { command: 'cancel', description: '❌ Cancel Operation' },
         ]);
 
@@ -159,6 +160,22 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             ctx.session.step = 'IDLE';
             ctx.session.tempTask = {};
             await ctx.reply('Operation cancelled.');
+        });
+
+        this.bot.command('help', async (ctx) => {
+            const helpText = `
+🤖 *DOMA Bot Help*
+
+Here are the commands you can use:
+
+🆕 */create* - Report a new issue or task.
+📋 */mytasks* - View tasks assigned to you.
+🔍 */inspect* - See rooms ready for inspection.
+❌ */cancel* - Stop the current operation.
+
+_Need more help? Contact your manager._
+`;
+            await ctx.reply(helpText, { parse_mode: 'Markdown' });
         });
     }
 
