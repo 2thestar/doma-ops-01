@@ -11,6 +11,7 @@ import { BotModule } from './bot/bot.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { MewsModule } from './mews/mews.module';
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { join } from 'path';
     TasksModule,
     AuthModule,
     BotModule,
-    EquipmentModule
+    EquipmentModule,
+    MewsModule
   ],
   controllers: [AppController],
   providers: [AppService],

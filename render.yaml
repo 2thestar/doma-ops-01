@@ -15,6 +15,12 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: MEWS_API_URL
+        value: https://api.mews.com/api/connector/v1
+      - key: MEWS_CLIENT_TOKEN
+        sync: false
+      - key: MEWS_ACCESS_TOKEN
+        sync: false
       - key: NODE_ENV
         value: production
 
