@@ -73,11 +73,30 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
 
         // Start the bot (Polling mode for MVP, even in prod)
         // Note: For high scale, switch to Webhooks (bot.handleUpdate)
+        // Start Bot
         this.bot.start({
-            onStart: (botInfo) => {
-                this.logger.log(`Bot started as @${botInfo.username}`);
-            },
+            allowed_updates: ['message', 'callback_query'],
         });
+
+        // Set Menu Button to open the Web App
+        // We use the Production URL because Telegram cannot access localhost without a tunnel.
+        // User checks local changes by pushing to prod later.
+        const webAppUrl = this.configService.get('WEB_APP_URL') || 'https://doma-web.onrender.com';
+
+        try {
+            await this.bot.api.setChatMenuButton({
+                menu_button: {
+                    type: 'web_app',
+                    text: 'Open DOMA 🏠',
+                    web_app: { url: webAppUrl },
+                },
+            });
+            this.logger.log(`Menu Button set to: ${webAppUrl}`);
+        } catch (e) {
+            this.logger.warn('Failed to set Menu Button', e);
+        }
+
+        this.logger.log(`Bot started as @${this.bot.botInfo.username}`);
     }
 
     async notifyUser(userId: string, message: string) {
@@ -152,7 +171,9 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
                 const user = await this.authService.validateTelegramUser(ctx.from!.id.toString());
                 await ctx.reply(`Welcome back, ${user.name}!`);
             } catch {
-                await ctx.reply(`Welcome! You are clearly new here. Your ID is: ${ctx.from!.id}. Ask an admin to add you.`);
+                // User unknown -> Start Onboarding
+                ctx.session.step = 'WAITING_FOR_NAME';
+                await ctx.reply('👋 **Welcome to DOMA!**\n\nI don\'t recognize you yet.\n\nPlease reply with your **Full Name** to request access (or link to your Staff account):', { parse_mode: 'Markdown' });
             }
         });
 
@@ -178,7 +199,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             }
             ctx.session.step = 'CREATING_TITLE';
             ctx.session.tempTask = {};
-            await ctx.reply('🆕 Create New Task\n\nPlease enter the *Task Title*:', { parse_mode: 'Markdown' });
+            await ctx.reply('🆕 [LOCAL] Create New Task\n\nPlease enter the *Task Title*:', { parse_mode: 'Markdown' });
         });
 
         this.bot.command('inspect', async (ctx) => {
@@ -235,14 +256,24 @@ _Need more help? Contact your manager._
             // --- ONBOARDING FLOW ---
             if (step === 'WAITING_FOR_NAME') {
                 try {
-                    // Create PENDING user
-                    await this.authService.registerPendingUser(ctx.from.id.toString(), text);
+                    // 1. Try to Link to existing seeded user
+                    const linkedUser = await this.authService.linkUserByName(ctx.from.id.toString(), text);
 
-                    ctx.session.step = 'IDLE';
-                    await ctx.reply(`✅ **Request Sent!**\n\nName: *${text}*\nID: \`${ctx.from.id}\`\n\nAn admin will review your request shortly.`, { parse_mode: 'Markdown' });
-                } catch (e) {
+                    if (linkedUser) {
+                        ctx.session.step = 'IDLE';
+                        await ctx.reply(`✅ **Account Linked!**\n\nWelcome back, **${linkedUser.name}**.\nYou keep your role: ${linkedUser.role}.`, { parse_mode: 'Markdown' });
+                        // Refresh ctx.user for this session
+                        ctx.user = linkedUser;
+                    } else {
+                        // 2. Fallback: Create PENDING user
+                        await this.authService.registerPendingUser(ctx.from.id.toString(), text);
+
+                        ctx.session.step = 'IDLE';
+                        await ctx.reply(`✅ **Request Sent!**\n\nName: *${text}*\nID: \`${ctx.from.id}\`\n\nAn admin will review your request shortly.`, { parse_mode: 'Markdown' });
+                    }
+                } catch (e: any) {
                     this.logger.error('Registration failed', e);
-                    await ctx.reply('❌ Error registering. Please try again later.');
+                    await ctx.reply(`❌ Error registering: ${e.message || e}`);
                 }
                 return;
             }

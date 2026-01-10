@@ -68,3 +68,10 @@ export const usersService = {
         return response.data;
     }
 };
+
+export const authService = {
+    telegramLogin: async (initData: string) => {
+        const response = await api.post('/auth/telegram-miniapp', { initData });
+        return response.data;
+    }
+};
