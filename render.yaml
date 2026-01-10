@@ -34,6 +34,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: VITE_API_URL
+        value: https://doma-api.onrender.com
 
 # NOTE: Render Free Tier spins down after inactivity.
 # For production use, "Starter" plan is recommended ($7/mo).
