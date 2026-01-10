@@ -36,7 +36,7 @@ databases:
   - name: doma-db
     plan: free
     databaseName: doma_db
-    user: postgres
+    user: doma_user
 
 # NOTE: Render Free Tier spins down after inactivity.
 # For production use, "Starter" plan is recommended ($7/mo).
