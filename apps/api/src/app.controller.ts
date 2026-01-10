@@ -33,6 +33,27 @@ export class AppController {
     return { message: 'Use /seed-spaces or /seed-users' };
   }
 
+  @Get('seed-users')
+  async seedUsers() {
+    const users = [
+      { name: 'Boris', role: 'MANAGER', telegramId: null }, // User requested this account
+      { name: 'Rita', role: 'MANAGER', telegramId: null },
+      { name: 'Andreia Vasconcelos', role: 'STAFF', telegramId: null },
+    ];
+
+    let count = 0;
+    for (const user of users) {
+      await this.prisma.user.upsert({
+        where: { name: user.name },
+        update: user,
+        create: user,
+      });
+      count++;
+    }
+
+    return { status: 'SUCCESS', message: `Seeded ${count} users!` };
+  }
+
   @Get('seed-spaces')
   async seedSpaces() {
     // 1. Ensure Property
