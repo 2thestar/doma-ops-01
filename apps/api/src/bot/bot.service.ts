@@ -119,7 +119,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
                 return next();
             } catch (e) {
                 // User not found -> Trigger Onboarding
-                if (ctx.session.step !== 'WAITING_FOR_NAME') {
+                if ((ctx.session.step as string) !== 'WAITING_FOR_NAME') {
                     ctx.session.step = 'WAITING_FOR_NAME';
                     await ctx.reply('👋 **Welcome to DOMA!**\n\nI don\'t recognize you yet.\n\nPlease reply with your **Full Name** to request access:', { parse_mode: 'Markdown' });
                 }
