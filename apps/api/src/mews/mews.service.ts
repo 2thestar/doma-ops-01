@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
+import { SpaceStatus } from '@prisma/client';
 
 @Injectable()
 export class MewsService {
@@ -72,19 +73,31 @@ export class MewsService {
             let updatedCount = 0;
 
             for (const room of mewsRooms) {
-                const mappedStatus = this.mapMewsStatus(room.State); // Function to implement
+                const mappedStatus = this.mapMewsStatus(room.State);
                 if (!mappedStatus) continue;
 
-                await this.prisma.space.upsert({
-                    where: { name: room.Number }, // Ideally use externalId, but name is safer for MVP
-                    update: { status: mappedStatus },
-                    create: {
+                const existingSpace = await this.prisma.space.findFirst({
+                    where: {
                         name: room.Number,
-                        type: 'ROOM', // Enum: SpaceType.ROOM
-                        status: mappedStatus,
                         zoneId: zone.id
                     }
                 });
+
+                if (existingSpace) {
+                    await this.prisma.space.update({
+                        where: { id: existingSpace.id },
+                        data: { status: mappedStatus }
+                    });
+                } else {
+                    await this.prisma.space.create({
+                        data: {
+                            name: room.Number,
+                            type: 'ROOM',
+                            status: mappedStatus,
+                            zoneId: zone.id
+                        }
+                    });
+                }
                 updatedCount++;
             }
 
@@ -96,15 +109,15 @@ export class MewsService {
         }
     }
 
-    private mapMewsStatus(mewsState: string): 'DIRTY' | 'CLEANING' | 'INSPECTED' | 'READY' | 'OUT_OF_ORDER' | null {
+    private mapMewsStatus(mewsState: string): SpaceStatus | null {
         // Mews States: Clean, Dirty, Inspected, OutOfService, OutOfOrder
         switch (mewsState) {
-            case 'Dirty': return 'DIRTY';
-            case 'Clean': return 'READY'; // Or INSPECTED, depending on workflow
-            case 'Inspected': return 'INSPECTED';
-            case 'OutOfOrder': return 'OUT_OF_ORDER';
-            case 'OutOfService': return 'OUT_OF_SERVICE';
-            default: return 'DIRTY'; // Fallback
+            case 'Dirty': return SpaceStatus.DIRTY;
+            case 'Clean': return SpaceStatus.READY;
+            case 'Inspected': return SpaceStatus.INSPECTED;
+            case 'OutOfOrder': return SpaceStatus.OUT_OF_ORDER;
+            case 'OutOfService': return SpaceStatus.OUT_OF_SERVICE;
+            default: return SpaceStatus.DIRTY; // Fallback
         }
     }
 }
