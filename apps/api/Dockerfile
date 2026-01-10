@@ -1,4 +1,4 @@
-FROM node:18-alpine AS builder
+FROM node:18-slim AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ WORKDIR /app/apps/api
 RUN npm run build
 
 # --- Production Stage ---
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
@@ -40,6 +40,9 @@ ENV PORT=3000
 # Create uploads directory
 RUN mkdir -p /app/uploads
 VOLUME /app/uploads
+
+# Install runtime dependencies for Prisma (Debian)
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
 
 WORKDIR /app/apps/api
 
