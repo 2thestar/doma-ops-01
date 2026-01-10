@@ -41,9 +41,6 @@ ENV PORT=3000
 RUN mkdir -p /app/uploads
 VOLUME /app/uploads
 
-# Install runtime dependencies for Prisma (OpenSSL 1.1 compat)
-RUN apk add --no-cache compat-openssl1.1
-
 WORKDIR /app/apps/api
 
 EXPOSE 3000
