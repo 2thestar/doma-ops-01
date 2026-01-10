@@ -65,17 +65,23 @@ export const RoomStatusGrid: React.FC = () => {
             </header>
 
             <div className="grid-container">
-                {spaces.map(space => (
-                    <div key={space.id} className="room-card" style={{ borderColor: getStatusColor(space.status) }}>
-                        <div className="room-header" style={{ background: getStatusColor(space.status) }}>
-                            <span className="room-name">{space.name}</span>
-                        </div>
-                        <div className="room-body">
-                            <span className="room-status">{space.status}</span>
+                {spaces.map(space => {
+                    const color = getStatusColor(space.status);
+                    return (
+                        <div key={space.id} className="room-grid-item" style={{ borderTop: `4px solid ${color}` }}>
+                            <span className="room-number">{space.name.replace('Room ', '')}</span>
+                            <div className="status-pill" style={{
+                                background: color,
+                                color: 'white',
+                                fontSize: '0.65rem',
+                                padding: '2px 8px'
+                            }}>
+                                {space.status}
+                            </div>
                             <span className="room-type">{space.type}</span>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <style>{`

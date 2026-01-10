@@ -82,20 +82,40 @@ export const TaskList = () => {
             )}
 
             <div className="task-list">
-                {loading ? <p>Loading...</p> : visibleTasks.map(task => (
-                    <div key={task.id} className="card task-card" style={{ borderLeft: `4px solid ${getPriorityColor(task.priority)}` }}>
-                        <div className="task-header">
-                            <span className="task-id">#{task.id.slice(0, 4)}</span>
-                            <span className="task-date">{new Date(task.createdAt).toLocaleDateString()}</span>
+                {loading ? <p>Loading...</p> : visibleTasks.map(task => {
+                    const color = getPriorityColor(task.priority);
+                    return (
+                        <div key={task.id} className="ticket-card" onClick={() => {/* Navigate to detail later */ }}>
+                            <div className="ticket-stripe" style={{ background: color }}></div>
+                            <div className="ticket-content">
+                                <div className="ticket-header">
+                                    <span>#{task.id.slice(0, 4)}</span>
+                                    <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <h3 className="ticket-title">{task.title}</h3>
+                                <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>
+                                    {task.space ? task.space.name : `Rm ${task.spaceId}`}
+                                </div>
+
+                                <div className="ticket-footer">
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        <span className="status-pill" style={{ background: '#F3F4F6', color: '#4B5563' }}>
+                                            {task.type}
+                                        </span>
+                                        {task.isGuestImpact && (
+                                            <span className="status-pill" style={{ background: '#FEE2E2', color: '#B91C1C' }}>
+                                                GUEST
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span style={{ fontWeight: 600, fontSize: '0.8rem', color: color }}>
+                                        {task.status.replace('_', ' ')}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <h3 className="task-title">{task.title}</h3>
-                        <div className="task-meta">
-                            <span className="badge">{task.type}</span>
-                            <span className="badge space">Rm {task.spaceId}</span>
-                            {task.isGuestImpact && <span className="badge alert">Guest!</span>}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
 
                 {!loading && visibleTasks.length === 0 && (
                     <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
@@ -129,50 +149,6 @@ export const TaskList = () => {
             .chip.active {
                 background: var(--primary-color);
                 color: white;
-            }
-            
-            .task-card {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                position: relative;
-            }
-            
-            .task-header {
-                display: flex;
-                justify-content: space-between;
-                font-size: 0.75rem;
-                color: var(--text-muted);
-            }
-            
-            .task-title {
-                font-size: 1.1rem;
-                margin: 0;
-            }
-            
-            .task-meta {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-            
-            .badge {
-                font-size: 0.7rem;
-                padding: 4px 8px;
-                border-radius: 4px;
-                background: #F3F4F6;
-                color: var(--text-secondary);
-                font-weight: 600;
-            }
-
-            .badge.space {
-                background: #E0F2FE;
-                color: #0369A1;
-            }
-
-            .badge.alert {
-                background: #FEE2E2;
-                color: #991B1B;
             }
         `}</style>
         </div>

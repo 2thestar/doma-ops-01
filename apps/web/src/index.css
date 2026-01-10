@@ -1,43 +1,47 @@
 :root {
   /* Brand Colors */
-  --primary-color: #2563EB; /* Royal Blue */
+  --primary-color: #2563EB;
+  /* Royal Blue */
   --primary-light: #60A5FA;
   --primary-dark: #1E40AF;
-  
-  --secondary-color: #10B981; /* Emerald Green */
+
+  --secondary-color: #10B981;
+  /* Emerald Green */
   --secondary-light: #34D399;
-  
-  --accent-color: #F59E0B; /* Amber */
-  --danger-color: #EF4444; /* Red */
-  
+
+  --accent-color: #F59E0B;
+  /* Amber */
+  --danger-color: #EF4444;
+  /* Red */
+
   /* Backgrounds */
   --bg-body: #F3F4F6;
   --bg-card: #FFFFFF;
   --bg-input: #F9FAFB;
-  
+
   /* Text */
   --text-primary: #111827;
   --text-secondary: #4B5563;
   --text-muted: #9CA3AF;
-  
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+
   /* Borders */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 9999px;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 300ms ease-in-out;
@@ -48,7 +52,7 @@
     --bg-body: #0F172A;
     --bg-card: #1E293B;
     --bg-input: #334155;
-    
+
     --text-primary: #F9FAFB;
     --text-secondary: #D1D5DB;
     --text-muted: #9CA3AF;
@@ -69,7 +73,12 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.25;
 }
@@ -80,17 +89,21 @@ button {
   font-family: inherit;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: 1rem;
 }
 
 /* Utilities */
 .container {
-  max-width: 600px; /* Mobile first focus */
+  max-width: 600px;
+  /* Mobile first focus */
   margin: 0 auto;
   padding: var(--spacing-md);
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: 80px;
+  /* Space for bottom nav */
 }
 
 .card {
@@ -157,10 +170,139 @@ input, select, textarea {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
   animation: fadeIn var(--transition-normal) forwards;
+}
+
+/* --- Flexkeeping-Inspired UI Overrides --- */
+
+:root {
+  --radius-xl: 16px;
+  --touch-target: 48px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ticket Card Design */
+.ticket-card {
+  display: flex;
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.ticket-card:active {
+  transform: scale(0.98);
+}
+
+.ticket-stripe {
+  width: 6px;
+  height: auto;
+  min-height: 100%;
+}
+
+.ticket-content {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.ticket-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1.3;
+}
+
+.ticket-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Status Pills */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Room Grid Card */
+.room-grid-item {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 90px;
+}
+
+.room-number {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #374151;
+}
+
+/* Mobile Actions */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  font-size: 24px;
+  z-index: 100;
+}
+
+.bottom-nav-spacer {
+  height: 80px;
 }
