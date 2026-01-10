@@ -10,7 +10,7 @@ export class MewsService {
     private readonly apiUrl: string;
     private readonly clientToken: string;
     private readonly accessToken: string;
-    private readonly clientName = 'DOMA v1.0';
+    private readonly clientName = 'n8n-mews-connector';
 
     constructor(
         private configService: ConfigService,
@@ -26,7 +26,9 @@ export class MewsService {
     }
 
     async getRoomStatuses() {
-        if (!this.clientToken || !this.accessToken) return [];
+        if (!this.clientToken || !this.accessToken) {
+            throw new Error('Missing MEWS Credentials');
+        }
 
         try {
             const response = await fetch(`${this.apiUrl}/spaces/getAll`, {
@@ -40,14 +42,15 @@ export class MewsService {
             });
 
             if (!response.ok) {
-                throw new Error(`MEWS API Error: ${response.statusText}`);
+                const text = await response.text();
+                throw new Error(`MEWS API Error: ${response.statusText} - ${text}`);
             }
 
             const data = await response.json();
             return data.Spaces || [];
         } catch (error) {
             this.logger.error('Failed to fetch from MEWS', error);
-            return [];
+            throw error;
         }
     }
 
