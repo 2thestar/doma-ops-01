@@ -109,6 +109,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
 
         // Auth Middleware
         this.bot.use(async (ctx, next) => {
+            this.logger.debug(`Incoming update: ${ctx.update.update_id} | Type: ${Object.keys(ctx.update).join(',')}`);
             if (!ctx.from) return next();
 
             // Allow START command to pass through to handler
@@ -124,6 +125,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
             try {
                 // Try to validate user
                 const user = await this.authService.validateTelegramUser(ctx.from.id.toString());
+                this.logger.debug(`User found: ${user.name} (${user.role})`);
 
                 // Check if Pending
                 if (user.role === 'PENDING') {
@@ -134,6 +136,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
                 ctx.user = user;
                 return next();
             } catch (e) {
+                this.logger.warn(`User validation failed for ${ctx.from.id}: ${e.message}`);
                 // User not found -> Trigger Onboarding
                 if ((ctx.session.step as string) !== 'WAITING_FOR_NAME') {
                     ctx.session.step = 'WAITING_FOR_NAME';
@@ -168,7 +171,11 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
         });
 
         this.bot.command('create', async (ctx) => {
-            if (!ctx.user) return;
+            this.logger.debug(`Command /create triggered by ${ctx.from?.id}`);
+            if (!ctx.user) {
+                this.logger.warn('Command /create blocked: No authenticated user.');
+                return;
+            }
             ctx.session.step = 'CREATING_TITLE';
             ctx.session.tempTask = {};
             await ctx.reply('🆕 Create New Task\n\nPlease enter the *Task Title*:', { parse_mode: 'Markdown' });
