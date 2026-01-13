@@ -6,12 +6,14 @@ export class CreateTaskDto implements CreateTaskPayload {
     description?: string;
     type: TaskType;
     priority: TaskPriority;
-    spaceId: string;
+    spaceId?: string;
+    customLocation?: string;
     assigneeId?: string;
     reporterId?: string;
     equipmentId?: string;
     dueAt?: string;
     isGuestImpact?: boolean;
+    blockLocationUntil?: string;
     images?: string[];
     status?: TaskStatus;
 }

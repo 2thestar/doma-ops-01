@@ -39,15 +39,20 @@ export class AppController {
       });
 
       if (existing) {
+        // Map legacy SUPERVISOR to MANAGER or keep existing if valid
+        const newRole = (user.role as any) === 'SUPERVISOR' ? 'MANAGER' : user.role;
         await this.prisma.user.update({
           where: { id: existing.id },
-          data: { role: user.role, telegramId: user.telegramId }
+          data: {
+            role: newRole as any, // Cast to any to bypass Prisma/Shared type lag
+            telegramId: user.telegramId
+          }
         });
       } else {
         await this.prisma.user.create({
           data: {
             name: user.name,
-            role: user.role,
+            role: user.role as any,
             telegramId: user.telegramId
           }
         });

@@ -12,6 +12,7 @@ import { EquipmentModule } from './equipment/equipment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MewsModule } from './mews/mews.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -30,7 +31,10 @@ import { MewsModule } from './mews/mews.module';
     AuthModule,
     BotModule,
     EquipmentModule,
-    MewsModule
+    BotModule,
+    EquipmentModule,
+    MewsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -31,4 +31,8 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+  @Patch(':id/shift')
+  toggleShift(@Param('id') id: string, @Body('isOnShift') isOnShift: boolean) {
+    return this.usersService.updateShift(id, isOnShift);
+  }
 }

@@ -14,7 +14,7 @@ export class UsersService {
         name: createUserDto.name,
         email: createUserDto.email,
         telegramId: createUserDto.telegramId,
-        role: createUserDto.role || 'EXECUTOR',
+        role: (createUserDto.role as any) === 'SUPERVISOR' ? 'MANAGER' : (createUserDto.role || 'STAFF') as any,
       }
     });
   }
@@ -30,7 +30,7 @@ export class UsersService {
   update(id: string, updateUserDto: UpdateUserDto) {
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: updateUserDto as any,
     });
   }
 
@@ -50,7 +50,7 @@ export class UsersService {
       data: {
         telegramId: data.telegramId,
         name: data.name,
-        role: 'EXECUTOR',
+        role: 'STAFF',
       },
     });
   }
@@ -58,7 +58,14 @@ export class UsersService {
   async setRole(userId: string, role: UserRole) {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { role },
+      data: { role: role as any },
+    });
+  }
+
+  async updateShift(userId: string, isOnShift: boolean) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isOnShift: isOnShift as any },
     });
   }
 }

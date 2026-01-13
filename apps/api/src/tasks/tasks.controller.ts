@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -13,8 +13,12 @@ export class TasksController {
   }
 
   @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  findAll(
+    @Query('userId') userId?: string,
+    @Query('reporterId') reporterId?: string,
+    @Query('reporterDepartment') reporterDepartment?: string,
+  ) {
+    return this.tasksService.findAll({ assigneeId: userId, reporterId, reporterDepartment });
   }
 
   @Get(':id')
@@ -30,5 +34,10 @@ export class TasksController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.tasksService.remove(id);
+  }
+
+  @Post(':id/comments')
+  addComment(@Param('id') id: string, @Body() body: { text: string, userId: string }) {
+    return this.tasksService.addComment(id, body.text, body.userId);
   }
 }

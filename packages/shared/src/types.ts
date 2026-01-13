@@ -3,30 +3,30 @@
 // but for a lightweight shared package, we might duplicate strictly or use a type-only import.
 // For now, let's strictly define them to avoid referencing the heavy prisma client in frontend bundle if not careful.
 
-export type UserRole = 'ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'STAFF' | 'EXECUTOR' | 'OWNER' | 'INSPECTOR' | 'PENDING';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'OWNER' | 'PENDING' | 'OBSERVER';
 
-export type TaskStatus = 'NEW' | 'TRIAGED' | 'ASSIGNED' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE' | 'VERIFIED' | 'CLOSED';
+export type TaskStatus = 'NEW' | 'TRIAGED' | 'ASSIGNED' | 'IN_PROGRESS' | 'BLOCKED' | 'READY_FOR_INSPECTION' | 'REOPENED' | 'DONE' | 'VERIFIED' | 'CLOSED';
 
 export type TaskPriority = 'P1' | 'P2' | 'P3';
 
-export type TaskType = 'HK' | 'MAINTENANCE' | 'FRONT_DESK' | 'SPA' | 'FNB' | 'INSPECTION' | 'PREVENTIVE' | 'OTHER';
+export type TaskType = 'HK' | 'MAINTENANCE' | 'FRONT_DESK' | 'WELLNESS' | 'FNB' | 'INSPECTION' | 'PREVENTIVE' | 'OTHER';
 
-export type SpaceStatus = 'DIRTY' | 'CLEANING' | 'INSPECTED' | 'READY' | 'OUT_OF_ORDER' | 'OUT_OF_SERVICE';
+export type SpaceStatus = 'DIRTY' | 'CLEANING' | 'INSPECTED' | 'OCCUPIED' | 'READY' | 'OUT_OF_ORDER' | 'OUT_OF_SERVICE';
 
-export type SpaceType = 'ROOM' | 'PUBLIC' | 'OUTDOOR' | 'BOH' | 'VENUE';
+export type SpaceType = 'ROOM' | 'PUBLIC' | 'OUTDOOR' | 'BOH' | 'VENUE' | 'WELLNESS' | 'ATMOS' | 'SERVICE';
+export type BusinessUnit = 'HOTEL' | 'FNB' | 'EVENTS' | 'ATMOS';
 
 export interface User {
     id: string;
-    telegramId: string | null;
     name: string;
-    email: string | null;
     role: UserRole;
-    createdAt: Date | string; // Allow string for JSON response
-    updatedAt: Date | string;
+    department?: TaskType;
+    isOnShift?: boolean;
 }
 
 export interface Task {
     id: string;
+    friendlyId: number;
     title: string;
     description: string | null;
     status: TaskStatus;
@@ -40,9 +40,18 @@ export interface Task {
     startedAt: Date | string | null;
     completedAt: Date | string | null;
     isGuestImpact: boolean;
+    responseTimeMinutes?: number | null;
+    blockLocationUntil?: Date | string | null;
     images: string[];
     createdAt: Date | string;
     updatedAt: Date | string;
+    // Inspection
+    readyAt?: Date | string | null;
+    inspectorId?: string | null;
+    inspectionResult?: string | null;
+    inspectionNotes?: string | null;
+    reopenCount?: number;
+    linkedTaskId?: string | null;
     // Relations (Optional in list view, present in detail)
     space?: Space;
     assignee?: User;
@@ -54,7 +63,12 @@ export interface Space {
     name: string;
     type: SpaceType;
     status: SpaceStatus;
+    description?: string;
+    businessUnit?: BusinessUnit;
     zoneId: string;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    tasks?: { id: string; priority: string }[];
 }
 
 // --- API Payloads (DTO Interfaces) ---
@@ -64,12 +78,15 @@ export interface CreateTaskPayload {
     description?: string;
     type: TaskType;
     priority: TaskPriority;
-    spaceId: string;
+    spaceId?: string;
+    customLocation?: string;
     assigneeId?: string;
     reporterId?: string;
     equipmentId?: string;
     dueAt?: string;
     isGuestImpact?: boolean;
+    responseTimeMinutes?: number;
+    blockLocationUntil?: string;
     images?: string[];
     status?: TaskStatus;
 }

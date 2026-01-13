@@ -22,6 +22,13 @@ export class SpacesService {
     return this.prisma.space.findMany({
       include: {
         zone: true,
+        tasks: {
+          where: {
+            type: 'MAINTENANCE',
+            status: { notIn: ['DONE', 'CLOSED'] }
+          },
+          select: { id: true, priority: true }
+        }
       }
     });
   }
@@ -59,7 +66,7 @@ export class SpacesService {
     return this.prisma.space.delete({ where: { id } });
   }
 
-  async updateStatus(id: string, status: SpaceStatus) {
+  async updateStatus(id: string, status: SpaceStatus, userId: string = 'system') {
     const space = await this.prisma.space.findUnique({ where: { id } });
     if (!space) throw new BadRequestException('Space not found');
 
@@ -69,7 +76,15 @@ export class SpacesService {
 
     return this.prisma.space.update({
       where: { id },
-      data: { status },
+      data: {
+        status,
+        activityLogs: {
+          create: {
+            userId,
+            action: `SPACE_STATUS_${status}`
+          }
+        }
+      },
     });
   }
 

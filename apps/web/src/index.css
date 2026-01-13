@@ -1,28 +1,36 @@
 :root {
-  /* Brand Colors */
-  --primary-color: #2563EB;
-  /* Royal Blue */
+  /* Premium Brand Colors (Midnight Blue Theme) */
+  --primary-color: #3B82F6;
+  /* Bright Blue */
   --primary-light: #60A5FA;
-  --primary-dark: #1E40AF;
+  --primary-dark: #2563EB;
 
   --secondary-color: #10B981;
-  /* Emerald Green */
-  --secondary-light: #34D399;
-
+  /* Emerald */
   --accent-color: #F59E0B;
   /* Amber */
   --danger-color: #EF4444;
   /* Red */
+  --purple-color: #8B5CF6;
+  /* Violet */
 
-  /* Backgrounds */
-  --bg-body: #F3F4F6;
-  --bg-card: #FFFFFF;
-  --bg-input: #F9FAFB;
+  /* Backgrounds - Deep Space / Midnight */
+  --bg-body: #0B1120;
+  /* Very Dark Blue */
+  --bg-card: #1E293B;
+  /* Slate 800 */
+  --bg-input: #334155;
+  /* Slate 700 */
+  --bg-elevated: #1E293B;
 
   /* Text */
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --text-muted: #9CA3AF;
+  --text-primary: #F3F4F6;
+  /* Gray 100 */
+  --text-secondary: #9CA3AF;
+  /* Gray 400 */
+  --text-muted: #6B7280;
+  /* Gray 500 */
+  --text-on-primary: #FFFFFF;
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -32,45 +40,44 @@
   --spacing-xl: 32px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.15);
 
   /* Borders */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --border-color: #334155;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  /* Softer corners */
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
   /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 300ms ease-in-out;
-}
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-body: #0F172A;
-    --bg-card: #1E293B;
-    --bg-input: #334155;
-
-    --text-primary: #F9FAFB;
-    --text-secondary: #D1D5DB;
-    --text-muted: #9CA3AF;
-  }
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  --touch-target: 48px;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-family);
   background-color: var(--bg-body);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 h1,
@@ -80,92 +87,140 @@ h4,
 h5,
 h6 {
   font-weight: 600;
-  line-height: 1.25;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  font-family: inherit;
+h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
-input,
-select,
-textarea {
-  font-family: inherit;
-  font-size: 1rem;
-}
+/* UI Components */
 
-/* Utilities */
-.container {
-  max-width: 600px;
-  /* Mobile first focus */
-  margin: 0 auto;
-  padding: var(--spacing-md);
-  padding-bottom: 80px;
-  /* Space for bottom nav */
-}
-
-.card {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: var(--spacing-md);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.card:active {
-  transform: scale(0.995);
-}
-
+/* Modern Button */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 12px 20px;
   border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
   transition: all var(--transition-fast);
   width: 100%;
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: var(--touch-target);
+  gap: 8px;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: var(--primary-color);
   color: white;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .btn-primary:active {
-  box-shadow: none;
   transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
 }
 
-.input-group {
-  margin-bottom: var(--spacing-md);
+.btn-secondary {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
-.input-label {
-  display: block;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xs);
-}
-
+/* Modern Input */
 .form-control {
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 12px 16px;
   background: var(--bg-input);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  transition: border-color var(--transition-fast);
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+  min-height: var(--touch-target);
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  background: #1E293B;
+  /* Slightly lighter on focus */
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+/* Modern Card */
+.card {
   background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  /* Subtle border */
+}
+
+/* Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-input);
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked+.slider {
+  background-color: var(--primary-color);
+}
+
+input:checked+.slider:before {
+  transform: translateX(20px);
 }
 
 /* Animations */
@@ -187,27 +242,17 @@ textarea {
 
 /* --- Flexkeeping-Inspired UI Overrides --- */
 
-:root {
-  --radius-xl: 16px;
-  --touch-target: 48px;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* Ticket Card Design */
 .ticket-card {
   display: flex;
-  background: white;
+  background: var(--bg-card);
   border-radius: var(--radius-xl);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 12px;
   overflow: hidden;
   position: relative;
   transition: transform 0.2s;
-  border: 1px solid rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border-color);
 }
 
 .ticket-card:active {
@@ -232,7 +277,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #9CA3AF;
+  color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 4px;
 }
@@ -240,7 +285,7 @@ body {
 .ticket-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1F2937;
+  color: var(--text-primary);
   line-height: 1.3;
 }
 
@@ -265,12 +310,12 @@ body {
 
 /* Room Grid Card */
 .room-grid-item {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
   padding: 12px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -282,7 +327,7 @@ body {
 .room-number {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 /* Mobile Actions */
@@ -305,4 +350,11 @@ body {
 
 .bottom-nav-spacer {
   height: 80px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+  padding-bottom: 80px;
 }

@@ -27,12 +27,13 @@ interface UserContextType {
     setCurrentUser: (user: UserProfile) => void;
     updateRole: (role: UserRole) => void;
     updateDepartment: (dept: TaskType) => void;
+    logout: () => void;
 }
 
 const defaultUser: UserProfile = {
     id: 'user-1',
     name: 'Boris',
-    role: 'MANAGER', // Default to Manager for demo
+    role: 'ADMIN', // Default to Admin for dev/testing
     department: 'HK'
 };
 
@@ -77,8 +78,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUser(prev => ({ ...prev, department }));
     };
 
+    const logout = () => {
+        localStorage.removeItem('doma_user');
+        // Reset to default or null. reloading page is safest to clear all state
+        window.location.reload();
+    };
+
     return (
-        <UserContext.Provider value={{ currentUser, setCurrentUser, updateRole, updateDepartment }}>
+        <UserContext.Provider value={{ currentUser, setCurrentUser, updateRole, updateDepartment, logout }}>
             {children}
         </UserContext.Provider>
     );

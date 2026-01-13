@@ -62,10 +62,12 @@ async function main() {
 
             const user = await prisma.user.create({
                 data: {
+                    id: '550e8400-e29b-41d4-a716-446655440099',
                     name: 'Boris',
                     email: email,
                     telegramId: telegramId,
-                    role: 'MANAGER',
+                    role: 'ADMIN',
+                    department: 'HK'
                 },
             });
             console.log(`✅ User created: ${user.name} (${user.role})`);

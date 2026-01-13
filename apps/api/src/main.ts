@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 // Trigger restart
 import * as path from 'path';
 import * as fs from 'fs';
+import { json, urlencoded } from 'express';
 
 // Force load .env manually
 const envPath = path.join(process.cwd(), '../../.env');
@@ -30,6 +31,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  await app.listen(process.env.PORT ?? 3000);
+  app.use(json({ limit: '5mb' }));
+  app.use(urlencoded({ extended: true, limit: '5mb' }));
+  const port = process.env.PORT ?? 3005;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

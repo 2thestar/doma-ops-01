@@ -38,20 +38,19 @@ export class AuthService {
     }
 
     async linkUserByName(telegramId: string, name: string) {
-        // 1. Find user by name (fuzzy or exact)
-        // For MVP, exact match or case-insensitive match
-        // We'll fetch all or use findFirst with insensitive mode if Prisma supports it (it does in Postgres)
-        // Let's rely on usersService to find/update. 
-        // We'll assume UsersService has access to Prisma.
-        // Quickest way: 
-        const users = await this.usersService.findAll(); // Optimization: implement findByName in UsersService later
+        const users = await this.usersService.findAll();
         const match = users.find(u => u.name.toLowerCase() === name.toLowerCase());
 
         if (match && !match.telegramId) {
-            // Link them!
             return this.usersService.update(match.id, { telegramId });
         }
         return null;
+    }
+
+    async linkTelegramUser(id: string, telegramId: string) {
+        const user = await this.usersService.findOne(id);
+        if (!user) return null;
+        return this.usersService.update(id, { telegramId });
     }
 
     async validateTelegramMiniApp(initData: string): Promise<any> {

@@ -11,12 +11,10 @@ datasource db {
 enum UserRole {
   ADMIN
   MANAGER
-  SUPERVISOR
   STAFF
-  EXECUTOR
   OWNER
-  INSPECTOR
   PENDING
+  OBSERVER
 }
 
 enum SpaceType {
@@ -25,12 +23,16 @@ enum SpaceType {
   OUTDOOR
   BOH
   VENUE
+  WELLNESS
+  ATMOS
+  SERVICE
 }
 
 enum SpaceStatus {
   DIRTY
   CLEANING
   INSPECTED
+  OCCUPIED
   READY
   OUT_OF_ORDER
   OUT_OF_SERVICE
@@ -42,6 +44,8 @@ enum TaskStatus {
   ASSIGNED
   IN_PROGRESS
   BLOCKED
+  READY_FOR_INSPECTION
+  REOPENED
   DONE
   VERIFIED
   CLOSED
@@ -57,7 +61,7 @@ enum TaskType {
   HK
   MAINTENANCE
   FRONT_DESK
-  SPA
+  WELLNESS
   FNB
   INSPECTION
   PREVENTIVE
@@ -69,9 +73,11 @@ model User {
   telegramId String? @unique
   name      String
   email     String?  @unique
-  role      UserRole @default(EXECUTOR)
+  role      UserRole @default(STAFF)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isOnShift Boolean @default(false)
+  department String? // Team (HK, MAINTENANCE, FRONT_DESK). Optional for Admin/Observer
 
   tasksAssigned Task[] @relation("TaskAssignee")
   tasksReported Task[] @relation("TaskReporter")
@@ -92,21 +98,36 @@ model Zone {
   spaces     Space[]
 }
 
+enum BusinessUnit {
+  HOTEL
+  FNB
+  EVENTS
+  ATMOS
+}
+
 model Space {
   id        String      @id @default(uuid())
   name      String
   type      SpaceType
   status    SpaceStatus @default(DIRTY)
+  description String?   // Freeform description
+  blockingReason String? // Reason for OOO status
+  blockedUntil DateTime? // When the block expires
+  businessUnit BusinessUnit? // Optional for now
   zoneId    String
   zone      Zone        @relation(fields: [zoneId], references: [id])
   tasks     Task[]
   equipment Equipment[]
+  activityLogs ActivityLog[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Equipment {
   id           String  @id @default(uuid())
   name         String
   serialNumber String?
+  category     String?
   spaceId      String
   space        Space   @relation(fields: [spaceId], references: [id])
   tasks        Task[]
@@ -114,13 +135,15 @@ model Equipment {
 
 model Task {
   id          String       @id @default(uuid())
+  friendlyId  Int          @unique @default(autoincrement())
   title       String
   description String?
   status      TaskStatus   @default(NEW)
   priority    TaskPriority @default(P3)
   type        TaskType
-  spaceId     String
-  space       Space        @relation(fields: [spaceId], references: [id])
+  spaceId     String?
+  space       Space?       @relation(fields: [spaceId], references: [id])
+  customLocation String?
   equipmentId String?
   equipment   Equipment?   @relation(fields: [equipmentId], references: [id])
   assigneeId  String?
@@ -131,8 +154,18 @@ model Task {
   startedAt   DateTime?
   completedAt DateTime?
   isGuestImpact Boolean @default(false)
+  responseTimeMinutes Int?
   images      String[]
+  blockLocationUntil DateTime?
   
+  // Inspection Fields
+  readyAt          DateTime?
+  inspectorId      String?
+  inspectionResult String? // PASS, FAIL
+  inspectionNotes  String?
+  reopenCount      Int       @default(0)
+  linkedTaskId     String?   // For Escalation
+
   templateId  String?
   template    TaskTemplate? @relation(fields: [templateId], references: [id])
 
@@ -156,6 +189,8 @@ model ActivityLog {
   id        String   @id @default(uuid())
   taskId    String?
   task      Task?    @relation(fields: [taskId], references: [id])
+  spaceId   String?
+  space     Space?   @relation(fields: [spaceId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   action    String

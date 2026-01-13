@@ -147,7 +147,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
                 this.logger.debug(`User found: ${user.name} (${user.role})`);
 
                 // Check if Pending
-                if (user.role === 'PENDING') {
+                if (user.role === ('PENDING' as any)) {
                     await ctx.reply('⏳ **Account Pending Approval**\n\nYour request has been sent to the manager. You will be notified once approved.', { parse_mode: 'Markdown' });
                     return;
                 }
@@ -167,28 +167,52 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
 
     private setupCommands() {
         this.bot.command('start', async (ctx) => {
+            const telegramId = ctx.from!.id.toString();
+            // Check for Deep Link (UUID)
+            const payload = ctx.match; // The parameter after /start
+            if (payload && payload.length > 10) { // Simple check, UUID is 36 chars
+                try {
+                    const linkedUser = await this.authService.linkTelegramUser(payload, telegramId) as any;
+                    if (!linkedUser) {
+                        await ctx.reply('⚠️ **Link Failed**\n\nInvalid link or user not found.');
+                        return;
+                    }
+                    await ctx.reply(`🔗 **Account Linked!**\n\nYou are now connected as **${linkedUser.name}**.\nRole: ${linkedUser.role}\nTeam: ${linkedUser.department || 'None'}`, { parse_mode: 'Markdown' });
+                    // Refresh session user
+                    ctx.user = linkedUser;
+                    return;
+                } catch (e) {
+                    await ctx.reply('⚠️ **Link Failed**\n\nInvalid link or user not found.');
+                }
+            }
+
             try {
-                const user = await this.authService.validateTelegramUser(ctx.from!.id.toString());
-                await ctx.reply(`Welcome back, ${user.name}!`);
+                const user = await this.authService.validateTelegramUser(telegramId);
+                const webAppUrl = this.configService.get('WEB_APP_URL') || 'https://doma-web.onrender.com';
+                const keyboard = new Keyboard().webApp('🏠 Open DOMA App', webAppUrl).resized();
+
+                await ctx.reply(`👋 Welcome back, ${user.name}!\n\nTAP BELOW to launch DOMA.`, {
+                    reply_markup: keyboard
+                });
             } catch {
                 // User unknown -> Start Onboarding
                 ctx.session.step = 'WAITING_FOR_NAME';
-                await ctx.reply('👋 **Welcome to DOMA!**\n\nI don\'t recognize you yet.\n\nPlease reply with your **Full Name** to request access (or link to your Staff account):', { parse_mode: 'Markdown' });
+                await ctx.reply('👋 **Welcome to DOMA!**\n\nI don\'t recognize you yet.\n\nPlease reply with your **Full Name** to request access (or use the Invite Link from your Manager).', { parse_mode: 'Markdown' });
             }
         });
 
         this.bot.command('mytasks', async (ctx) => {
             if (!ctx.user) return;
-            const tasks = await this.tasksService.findMyTasks(ctx.user.id);
+            const tasks = await this.tasksService.findAll({ assigneeId: ctx.user.id });
             if (tasks.length === 0) {
-                await ctx.reply('No tasks assigned to you.');
-            } else {
-                const msg = tasks.map(t => {
-                    const spaceName = t.space ? t.space.name : 'Unknown Location';
-                    return `• *${t.title}* \n  📍 ${spaceName} | 🚦 ${t.priority} | Status: ${t.status}`;
-                }).join('\n\n');
-                await ctx.reply(`📋 *Your Assigned Tasks:*\n\n${msg}`, { parse_mode: 'Markdown' });
+                await ctx.reply('👍 All clean! No tasks assigned.');
+                return;
             }
+            const msg = tasks.map(t => {
+                const spaceName = t.space ? t.space.name : 'Unknown Location';
+                return `• *${t.title}* \n  📍 ${spaceName} | 🚦 ${t.priority} | Status: ${t.status}`;
+            }).join('\n\n');
+            await ctx.reply(`📋 *Your Assigned Tasks:*\n\n${msg}`, { parse_mode: 'Markdown' });
         });
 
         this.bot.command('create', async (ctx) => {
@@ -261,7 +285,13 @@ _Need more help? Contact your manager._
 
                     if (linkedUser) {
                         ctx.session.step = 'IDLE';
-                        await ctx.reply(`✅ **Account Linked!**\n\nWelcome back, **${linkedUser.name}**.\nYou keep your role: ${linkedUser.role}.`, { parse_mode: 'Markdown' });
+                        const webAppUrl = this.configService.get('WEB_APP_URL') || 'https://doma-web.onrender.com';
+                        const keyboard = new Keyboard().webApp('🏠 Open DOMA App', webAppUrl).resized();
+
+                        await ctx.reply(`✅ **Account Linked!**\n\nWelcome back, **${linkedUser.name}**.\nTap below to open the app.`, {
+                            parse_mode: 'Markdown',
+                            reply_markup: keyboard
+                        });
                         // Refresh ctx.user for this session
                         ctx.user = linkedUser;
                     } else {
