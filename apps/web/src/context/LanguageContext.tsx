@@ -83,7 +83,6 @@ const translations: Translations = {
         'lbl.team_requests': 'Created by Team',
         'lbl.lapses': 'Lapse',
         'lbl.created': 'Created',
-        'lbl.assigned_to': 'Assigned To',
     },
     pt: {
         'app.title': 'DOMA Ops',
@@ -110,9 +109,7 @@ const translations: Translations = {
         'lbl.lapses': 'Tempo Decorrido',
         'lbl.created': 'Criado',
         'lbl.assigned_to': 'Atribuído a',
-        'lbl.request_status': 'Estado dos Pedidos',
-        'lbl.my_requests': 'Criado por Mim',
-        'lbl.team_requests': 'Criado pela Equipa',
+
 
         'lbl.guestImpact': 'Impacto Hóspede?',
         'lbl.uploadImage': 'Enviar Foto',
@@ -124,7 +121,6 @@ const translations: Translations = {
         'lbl.role': 'Função',
         'lbl.team_dept': 'Equipa / Departamento',
         'lbl.logged_in_as': 'Sessão iniciada como',
-        'lbl.assigned_to': 'Atribuído a',
         'lbl.no_description': 'Sem descrição fornecida.',
         'lbl.start_task': 'Iniciar Tarefa (Em Curso)',
         'lbl.mark_done': 'Marcar como Concluída',

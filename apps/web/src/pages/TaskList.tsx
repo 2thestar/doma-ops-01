@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
 import { taskService, usersService } from '../services/api';
-import type { Task, TaskType, TaskStatus } from '../types';
+import type { Task, TaskType } from '../types';
 
 export const TaskList = () => {
     // Context & State
@@ -16,7 +16,7 @@ export const TaskList = () => {
     );
     const [filterDept, setFilterDept] = useState<TaskType | 'ALL'>('ALL');
     const [filterLocation, setFilterLocation] = useState<'ALL' | 'ROOMS' | 'PUBLIC' | 'WELLNESS' | 'OTHERS'>('ALL');
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
     // Selection & Drawer
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -56,13 +56,7 @@ export const TaskList = () => {
     };
 
     // --- Helpers ---
-    const getPriorityColor = (p: string) => {
-        switch (p) {
-            case 'P1': return 'var(--danger-color)';
-            case 'P2': return 'var(--accent-color)';
-            default: return 'var(--secondary-color)';
-        }
-    };
+
 
     const formatDuration = (minutes: number) => {
         const h = Math.floor(minutes / 60);
@@ -272,7 +266,7 @@ export const TaskList = () => {
                 task={selectedTask}
                 currentUser={currentUser}
                 simulatedRole={simulatedRole}
-                onUpdate={(updated) => {
+                onUpdate={(updated: Task) => {
                     setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
                     setSelectedTask(updated);
                 }}
@@ -340,7 +334,7 @@ export const TaskList = () => {
 };
 
 // --- Drawer Component ---
-const Drawer = ({ isOpen, onClose, task, currentUser, simulatedRole, onUpdate }: any) => {
+const Drawer = ({ isOpen, onClose, task, simulatedRole, onUpdate }: any) => {
     const [users, setUsers] = useState<any[]>([]);
     const [logs, setLogs] = useState<any[]>([]);
     const [comment, setComment] = useState('');
