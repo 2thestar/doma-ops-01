@@ -152,7 +152,7 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
                     return;
                 }
 
-                ctx.user = user;
+                ctx.user = user as any;
                 return next();
             } catch (e) {
                 this.logger.warn(`User validation failed for ${ctx.from.id}: ${e.message}`);
@@ -293,7 +293,7 @@ _Need more help? Contact your manager._
                             reply_markup: keyboard
                         });
                         // Refresh ctx.user for this session
-                        ctx.user = linkedUser;
+                        ctx.user = linkedUser as any;
                     } else {
                         // 2. Fallback: Create PENDING user
                         await this.authService.registerPendingUser(ctx.from.id.toString(), text);
