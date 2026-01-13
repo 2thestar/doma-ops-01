@@ -16,6 +16,7 @@ import { InspectorQueue } from './pages/InspectorQueue';
 import RequestStatus from './pages/RequestStatus';
 
 function App() {
+  console.log('DOMA App Version: 2026-01-13 vNew - Build Verification');
   return (
     <LanguageProvider>
       <UserProvider>
