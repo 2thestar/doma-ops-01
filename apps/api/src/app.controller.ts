@@ -63,6 +63,35 @@ export class AppController {
     return { status: 'SUCCESS', message: `Seeded ${count} new users!` };
   }
 
+
+  @Get('debug-db')
+  async debugDb() {
+    try {
+      const url = process.env.DATABASE_URL;
+      const sanitizedUrl = url ? url.replace(/:[^:@]*@/, ':****@') : 'UNDEFINED';
+
+      await this.prisma.$connect();
+      const userCount = await this.prisma.user.count();
+      const spaceCount = await this.prisma.space.count();
+
+      return {
+        status: 'OK',
+        databaseUrl: sanitizedUrl,
+        counts: { userCount, spaceCount },
+        envObj: Object.keys(process.env).filter(k => !k.includes('KEY') && !k.includes('SECRET'))
+      };
+    } catch (error) {
+      console.error('DEBUG DB ERROR:', error);
+      return {
+        status: 'ERROR',
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        meta: error.meta
+      };
+    }
+  }
+
   @Get('seed-spaces')
   async seedSpaces() {
     // 1. Ensure Property
