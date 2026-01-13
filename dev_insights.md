@@ -46,3 +46,9 @@ DOMA Ops is a housekeeping and maintenance task management system. It relies on 
 ## Common Commands
 - **Seed**: `npx ts-node src/seed_full.ts` (in `apps/api`)
 - **Schema Push**: `npx prisma db push --schema=../../packages/shared/schema.prisma`
+
+### Recent Learnings (Jan 2026)
+- **Monorepo Build Paths**: `npm run build` inside a workspace might output to `dist/src/main` instead of `dist/main` if internal folders (like `scripts`) are included in compilation. Always verify `dist` structure locally before changing Docker `CMD`.
+- **Crash Loops**: NestJS applications will crash immediately if `PrismaService` fails to connect in `onModuleInit`.
+    - *Fix*: Wrap `$connect()` in a try/catch block to allow the app to boot into "Safe Mode". This enables access to debug endpoints (like `/debug-db`) even when the DB is unreachable.
+- **Dependency Caching**: Docker caches can hold onto old `packages/shared` builds. If a type error persists despite a fix, forced casting (`as any`) can be used as a temporary unblocker.
