@@ -113,9 +113,7 @@ const translations: Translations = {
         'lbl.request_status': 'Estado dos Pedidos',
         'lbl.my_requests': 'Criado por Mim',
         'lbl.team_requests': 'Criado pela Equipa',
-        'lbl.lapses': 'Tempo Decorrido',
-        'lbl.created': 'Criado',
-        'lbl.assigned_to': 'Atribuído a',
+
         'lbl.guestImpact': 'Impacto Hóspede?',
         'lbl.uploadImage': 'Enviar Foto',
         'lbl.save': 'Guardar Configuração',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { taskService } from '../services/api';
-import type { Task, TaskStatus } from '../types';
+import type { Task } from '../types';
 
 export const InspectorQueue = () => {
     const { currentUser } = useUser();

@@ -19,6 +19,8 @@ export type BusinessUnit = 'HOTEL' | 'FNB' | 'EVENTS' | 'ATMOS';
 export interface User {
     id: string;
     name: string;
+    email?: string;
+    telegramId?: string;
     role: UserRole;
     department?: TaskType;
     isOnShift?: boolean;
@@ -32,7 +34,8 @@ export interface Task {
     status: TaskStatus;
     priority: TaskPriority;
     type: TaskType;
-    spaceId: string;
+    spaceId: string | null; // Allow null for custom location
+    customLocation?: string | null;
     equipmentId: string | null;
     assigneeId: string | null;
     reporterId: string | null;
@@ -64,6 +67,8 @@ export interface Space {
     type: SpaceType;
     status: SpaceStatus;
     description?: string;
+    blockingReason?: string;
+    blockedUntil?: Date | string | null;
     businessUnit?: BusinessUnit;
     zoneId: string;
     createdAt?: Date | string;
@@ -89,6 +94,10 @@ export interface CreateTaskPayload {
     blockLocationUntil?: string;
     images?: string[];
     status?: TaskStatus;
+    // Inspection Updates
+    inspectorId?: string;
+    inspectionResult?: string;
+    inspectionNotes?: string;
 }
 
 export interface UpdateTaskPayload extends Partial<CreateTaskPayload> { }

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
-import { taskService } from '../services/api';
+import { taskService, usersService } from '../services/api';
 import type { Task, TaskType, TaskStatus } from '../types';
 
 export const TaskList = () => {
     // Context & State
-    const { t } = useLanguage();
+    const { } = useLanguage();
     const { currentUser } = useUser();
     const [tasks, setTasks] = useState<Task[]>([]);
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
-import type { TaskType, UserRole } from '../types';
 
 export const Profile = () => {
     const { language, setLanguage, t } = useLanguage();

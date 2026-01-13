@@ -82,8 +82,6 @@ export const RoomStatusGrid: React.FC = () => {
         }
     };
 
-    const isManager = currentUser.role === 'MANAGER';
-
     const handleStatusChange = async (status: SpaceStatus) => {
         if (!selectedSpace) return;
 

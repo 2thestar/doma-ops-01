@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
-import { useLanguage } from '../context/LanguageContext'; // Keeping context but ignoring keys as requested
 import { taskService } from '../services/api';
 import type { Task } from '../types';
 
