@@ -50,4 +50,4 @@ WORKDIR /app/apps/api
 EXPOSE 3000
 
 # Run Migrations -> Start App
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
