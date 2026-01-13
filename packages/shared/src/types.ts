@@ -19,10 +19,10 @@ export type BusinessUnit = 'HOTEL' | 'FNB' | 'EVENTS' | 'ATMOS';
 export interface User {
     id: string;
     name: string;
-    email?: string;
-    telegramId?: string;
+    email?: string | null;
+    telegramId?: string | null;
     role: UserRole;
-    department?: TaskType;
+    department?: TaskType | null;
     isOnShift?: boolean;
 }
 
