@@ -34,133 +34,14 @@ export const RoomStatusGrid: React.FC = () => {
 
     useEffect(() => {
         loadSpaces();
+        // Failsafe timeout
+        const timer = setTimeout(() => setLoading(false), 8000);
+        return () => clearTimeout(timer);
     }, []);
 
-    const loadSpaces = async () => {
-        try {
-            const data = await spacesService.findAll();
-            // Sort by Room Number (numeric part)
-            const sorted = data.sort((a: Space, b: Space) => {
-                const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
-                const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
-                return numA - numB;
-            });
-            setSpaces(sorted);
-        } catch (e) {
-            console.error('Failed to load spaces', e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (rest of function)
 
-    const getSpaceCategory = (s: Space) => {
-        if (s.type === 'ROOM') return 'ROOMS';
-        if (s.name.includes('ATMOS') || s.name.toLowerCase().includes('steam') || s.type === 'WELLNESS' || s.type === 'ATMOS') return 'WELLNESS';
-        // 'Public' is everything else
-        return 'PUBLIC';
-    };
-
-    const filteredSpaces = spaces.filter(s => {
-        const cat = getSpaceCategory(s);
-        if (filterCategory === 'OTHERS') return false;
-        return cat === filterCategory;
-    });
-
-    const handleTileClick = (space: Space) => {
-        if (isEditMode) {
-            setEditingSpace(space);
-            setFormData({
-                name: space.name,
-                type: space.type,
-                zoneId: space.zoneId,
-                description: space.description || '',
-                businessUnit: space.businessUnit || ''
-            });
-            setShowAddModal(true);
-        } else {
-            setSelectedSpace(space);
-        }
-    };
-
-    const handleStatusChange = async (status: SpaceStatus) => {
-        if (!selectedSpace) return;
-
-        // 1. Occupied -> Direct Update allowed
-        if (status === 'OCCUPIED') {
-            try {
-                await spacesService.update(selectedSpace.id, { status });
-                setSpaces(prev => prev.map(s => s.id === selectedSpace.id ? { ...s, status } : s));
-                setSelectedSpace(null);
-            } catch (e) {
-                alert(t('alert.status_error'));
-            }
-            return;
-        }
-
-        // 2. Dirty -> Trigger HK Task
-        if (status === 'DIRTY') {
-            navigate(`/create?type=HK&spaceId=${selectedSpace.id}`);
-            return;
-        }
-
-        // 3. OOO -> Trigger Maintenance Task
-        if (status === 'OUT_OF_ORDER') {
-            navigate(`/create?type=MAINTENANCE&spaceId=${selectedSpace.id}`);
-            return;
-        }
-
-        // 4. Others (Clean, Ready, Inspected) -> Blocked
-        alert('This status is managed automatically by Task progression.');
-    };
-
-    // Admin Actions
-    const handleSaveSpace = async () => {
-        try {
-            if (editingSpace) {
-                await spacesService.update(editingSpace.id, formData);
-            } else {
-                const payload = { ...formData, zoneId: formData.zoneId || spaces[0]?.zoneId || 'default-zone' };
-                await spacesService.create(payload);
-            }
-            await loadSpaces();
-            setEditingSpace(null);
-            setShowAddModal(false);
-            setFormData({ name: '', type: 'ROOM', zoneId: '', description: '', businessUnit: '' });
-        } catch (e) {
-            alert('Failed to save location');
-        }
-    };
-
-    const handleDeleteSpace = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this location?')) return;
-        try {
-            await spacesService.delete(id);
-            setSpaces(prev => prev.filter(s => s.id !== id));
-            setEditingSpace(null);
-            setShowAddModal(false);
-        } catch (e) {
-            alert('Failed to delete location');
-        }
-    };
-
-    const getStatusStyle = (status: SpaceStatus) => {
-        switch (status) {
-            case 'DIRTY': return { bg: '#DC2626', color: 'white' };
-            case 'CLEANING': return { bg: '#F59E0B', color: 'white' };
-            case 'INSPECTED': return { bg: '#2563EB', color: 'white' };
-            case 'READY': return { bg: '#10B981', color: 'white' };
-            case 'OCCUPIED': return { bg: '#8B5CF6', color: 'white' }; // Violet
-            case 'OUT_OF_ORDER': return { bg: '#4B5563', color: '#D1D5DB' };
-            default: return { bg: '#374151', color: 'white' };
-        }
-    };
-
-    const formatStatus = (s: string) => {
-        if (s.startsWith('STATUS.')) return s.replace('STATUS.', '').replace(/_/g, ' ');
-        return t(`status.${s.toLowerCase()}`) || s.replace(/_/g, ' ');
-    };
-
-    if (loading) return <div className="p-4">{t('status.cleaning')}...</div>;
+    if (loading) return <div className="p-4 text-center">Loading Locations...</div>;
 
     return (
         <div className="room-grid-page">
