@@ -21,6 +21,7 @@ export const RoomStatusGrid: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingSpace, setEditingSpace] = useState<Space | null>(null);
 
+
     // Form State
     const [formData, setFormData] = useState<{
         name: string;
@@ -32,14 +33,118 @@ export const RoomStatusGrid: React.FC = () => {
 
     const [filterCategory, setFilterCategory] = useState<'ROOMS' | 'PUBLIC' | 'WELLNESS' | 'OTHERS'>('ROOMS');
 
+    // Load Data
+    const loadSpaces = async () => {
+        try {
+            setLoading(true);
+            const data = await spacesService.findAll();
+            setSpaces(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         loadSpaces();
-        // Failsafe timeout
-        const timer = setTimeout(() => setLoading(false), 8000);
-        return () => clearTimeout(timer);
     }, []);
 
-    // ... (rest of function)
+    // Filters & Sorting
+    const filteredSpaces = spaces.filter(s => {
+        if (filterCategory === 'ROOMS') return s.type === 'ROOM';
+        if (filterCategory === 'PUBLIC') return ['PUBLIC', 'SERVICE', 'BOH'].includes(s.type);
+        if (filterCategory === 'WELLNESS') return ['WELLNESS', 'ATMOS', 'OUTDOOR'].includes(s.type);
+        if (filterCategory === 'OTHERS') return !['ROOM', 'PUBLIC', 'SERVICE', 'BOH', 'WELLNESS', 'ATMOS', 'OUTDOOR'].includes(s.type);
+        return true;
+    }).sort((a, b) => {
+        // Numeric sort if possible, else alphabetical
+        const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+        const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+        if (numA && numB) return numA - numB;
+        return a.name.localeCompare(b.name);
+    });
+
+    // Styles Helper
+    const getStatusStyle = (status: SpaceStatus) => {
+        switch (status) {
+            case 'OCCUPIED': return { bg: '#E9D5FF', color: '#6B21A8' }; // Purple
+            case 'DIRTY': return { bg: '#FCA5A5', color: '#991B1B' }; // Red
+            case 'CLEANING': return { bg: '#FDE68A', color: '#92400E' }; // Amber
+            case 'READY': return { bg: '#6EE7B7', color: '#065F46' }; // Green
+            case 'INSPECTED': return { bg: '#93C5FD', color: '#1E40AF' }; // Blue
+            case 'OUT_OF_ORDER': return { bg: '#4B5563', color: '#F3F4F6' }; // Gray
+            case 'OUT_OF_SERVICE': return { bg: '#374151', color: '#9CA3AF' }; // Dark Gray
+            default: return { bg: 'var(--bg-card)', color: 'var(--text-primary)' };
+        }
+    };
+
+    const formatStatus = (status: SpaceStatus) => {
+        const key = `status.${status.toLowerCase()}`;
+        return t(key) !== key ? t(key) : status.replace(/_/g, ' ');
+    };
+
+    // Handlers
+    const handleTileClick = (space: Space) => {
+        if (isEditMode) {
+            setEditingSpace(space);
+            setFormData({
+                name: space.name,
+                type: space.type,
+                zoneId: space.zoneId || '',
+                description: space.description || '',
+                businessUnit: space.businessUnit || '' as any
+            });
+            setShowAddModal(true);
+        } else {
+            setSelectedSpace(space);
+        }
+    };
+
+    const handleStatusChange = async (newStatus: SpaceStatus) => {
+        if (!selectedSpace) return;
+        try {
+            // Optimistic update
+            const updatedSpace = { ...selectedSpace, status: newStatus };
+            setSpaces(prev => prev.map(s => s.id === selectedSpace.id ? updatedSpace : s));
+            setSelectedSpace(updatedSpace);
+
+            await spacesService.update(selectedSpace.id, { status: newStatus });
+        } catch (error) {
+            console.error(error);
+            alert(t('alert.status_error'));
+            loadSpaces(); // Revert on failure
+        }
+    };
+
+    const handleSaveSpace = async () => {
+        try {
+            if (editingSpace) {
+                await spacesService.update(editingSpace.id, formData as any);
+            } else {
+                await spacesService.create(formData as any);
+            }
+            setShowAddModal(false);
+            setEditingSpace(null);
+            loadSpaces();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to save location');
+        }
+    };
+
+    const handleDeleteSpace = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this location?')) return;
+        try {
+            await spacesService.delete(id);
+            setShowAddModal(false);
+            setEditingSpace(null);
+            loadSpaces();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete location');
+        }
+    };
 
     if (loading) return <div className="p-4 text-center">Loading Locations...</div>;
 
