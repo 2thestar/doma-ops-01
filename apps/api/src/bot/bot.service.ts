@@ -76,6 +76,11 @@ export class BotService implements OnModuleInit, OnModuleDestroy {
         // Start Bot
         this.bot.start({
             allowed_updates: ['message', 'callback_query'],
+        }).catch(err => {
+            this.logger.error('Failed to start Telegram Bot (Polling Conflict or Network Error)', err);
+            // We do not rethrow to prevent app crash.
+            // In a rolling update scenario, the old pod will eventually die, releasing the conflict.
+            // Ideally, we could retry after a delay, but for now we just log it.
         });
 
         // Set Menu Button to open the Web App

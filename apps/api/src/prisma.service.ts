@@ -4,10 +4,10 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
     constructor() {
-        let url = process.env.DATABASE_URL;
-        if (url && !url.includes('pgbouncer=true')) {
-            url += url.includes('?') ? '&pgbouncer=true' : '?pgbouncer=true';
-        }
+        const url = process.env.DATABASE_URL;
+
+        // Removed automatic pgbouncer=true appendage as it may cause connection issues with certain providers/modes.
+        // Users should include it in the connection string if required.
 
         super({
             datasources: {
